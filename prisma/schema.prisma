@@ -1,0 +1,152 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
+    // Further reading:
+    // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
+    // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
+    url      = env("DATABASE_URL")
+}
+
+model Post {
+    id        Int      @id @default(autoincrement())
+    name      String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    createdBy   User   @relation(fields: [createdById], references: [id])
+    createdById String
+
+    @@index([name])
+}
+
+// Necessary for Next auth
+model Account {
+    id                String  @id @default(cuid())
+    userId            String
+    type              String
+    provider          String
+    providerAccountId String
+    refresh_token     String? // @db.Text
+    access_token      String? // @db.Text
+    expires_at        Int?
+    token_type        String?
+    scope             String?
+    id_token          String? // @db.Text
+    session_state     String?
+    user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([provider, providerAccountId])
+}
+
+model Session {
+    id           String   @id @default(cuid())
+    sessionToken String   @unique
+    userId       String
+    expires      DateTime
+    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+    id            String           @id @default(cuid())
+    name          String?
+    email         String?          @unique
+    emailVerified DateTime?
+    image         String?
+    accounts      Account[]
+    sessions      Session[]
+    Taccounts     TradingAccount[]
+
+    Post Post[]
+}
+
+model VerificationToken {
+    identifier String
+    token      String   @unique
+    expires    DateTime
+
+    @@unique([identifier, token])
+}
+
+// app schema
+
+model TradingAccount {
+    id        String      @id @default(cuid())
+    balance   Float       @default(1000)
+    margin    Int         @default(100)
+    assets    Assets[]
+    statement FullOrder[]
+    User      User?       @relation(fields: [userId], references: [id])
+    userId    String?
+    watchList String[]    @default(["", "", "", "", "", "", ""])
+    Pin0      String      @default("ETHUSDT")
+    Pin1      String      @default("BTCUSDT")
+}
+
+// model Transection {
+//     id               String          @id @default(cuid())
+//     type             String
+//     asset            String
+//     amount           Float
+//     order            FullOrder?
+//     TradingAccount   TradingAccount? @relation(fields: [tradingAccountId], references: [id])
+//     tradingAccountId String?
+//     fullOrderId      String?
+// }
+
+model Assets {
+    id           String @id @default(cuid())
+    name         String
+    totalAmount  Float
+    lockedAmount Float
+    freeAmount   Float
+
+    TradingAccount   TradingAccount? @relation(fields: [tradingAccountId], references: [id])
+    tradingAccountId String?
+}
+
+model FullOrder {
+    id               String         @id @default(cuid())
+    createsAt        DateTime       @default(now())
+    name             String
+    type             String
+    trigerType       EtrigerType
+    status           orderStatus    @default(patial_filled)
+    price            Float
+    avgPrice         Float
+    totalAmount      Float
+    filledAmount     Float
+    sl               Int            @default(0)
+    tp               Int            @default(0)
+    // suborders        Suborder[]
+    TradingAccount   TradingAccount @relation(fields: [TradingAccountId], references: [id])
+    TradingAccountId String
+}
+
+enum EtrigerType {
+    LIMIT
+    STOP
+    MARKET
+}
+
+enum orderStatus {
+    patial_filled
+    completed
+    cancelled
+}
+
+// model Suborder {
+//     id          String     @id @default(cuid())
+//     createsAt   DateTime   @default(now())
+//     name        String
+//     Price       Float
+//     Amount      Float
+//     FullOrder   FullOrder? @relation(fields: [fullOrderId], references: [id])
+//     fullOrderId String?
+// }
