@@ -18,6 +18,7 @@ const ws = new WSbinance("wss://stream.binance.com:9443/ws", {
             while (asks.length && asks[0].price >= Number(data.p)) {
                 console.log("order complete");
                 asks.shift();
+                
             }
         } else if (bids.length && bids[0].price <= Number(data.p)) {
             console.log("bids matched");
