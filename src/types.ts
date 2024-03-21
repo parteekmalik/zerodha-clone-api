@@ -16,7 +16,7 @@ export type WS_response = { result: null | string[]; id: number } | { s: string;
 export type TPostReq = {
     name: string;
     type: "BUY" | "SELL";
-    trigerType: $Enums.EtrigerType;
+    trigerType: "LIMIT" | "STOP" | "MARKET";
     status: $Enums.orderStatus;
     price: number;
     quantity: number;

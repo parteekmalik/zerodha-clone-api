@@ -1,20 +1,14 @@
 {
-  "compilerOptions": {
-    "outDir": "dist",
-    "sourceMap": true,
-    "target": "esnext",
-    "module": "commonjs",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
-    "strict": true,
-    "skipLibCheck": true
-  },
-  "include": [
-    "./*.js",
-    "src/**/*.ts",
-    "test/**/*.ts",
-    "src/extract.js",
-    "puzzle_db/create_puzzle.ts"
-, "src/env.ts"  ]
+    "compilerOptions": {
+        "outDir": "dist",
+        "sourceMap": true,
+        "target": "esnext",
+        "module": "commonjs",
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitAny": true,
+        "strict": true,
+        "skipLibCheck": true
+    },
+    "include": ["./*.js", "src/**/*.ts", "test/**/*.ts", "src/extract.js", "puzzle_db/create_puzzle.ts", "src/env.ts"]
 }

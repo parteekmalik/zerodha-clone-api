@@ -126,15 +126,15 @@ model FullOrder {
     TradingAccountId String
 }
 
-enum OrderType {
-    BUY
-    SELL
-}
-
 enum EtrigerType {
     LIMIT
     STOP
     MARKET
+}
+
+enum OrderType {
+    BUY
+    SELL
 }
 
 enum orderStatus {
