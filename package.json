@@ -4,9 +4,9 @@
     "description": " A basic starter for an express.js API with Typescript",
     "main": "src/index.ts",
     "scripts": {
-        "dev": "nodemon --exec ts-node src/server.ts",
+        "dev": "nodemon --exec ts-node src/index.ts",
         "querry": "ts-node src/querrymannuall.ts",
-        "start:server1": "ts-node src/server.ts",
+        "start:server1": "ts-node src/index.ts",
         "start:server2": "nodemon --exec ts-node src/index1.ts",
         "start:server3": "nodemon --exec ts-node src/matchMaking.ts",
         "start": "concurrently \"npm run start:server1\" \"npm run start:server2\" \"npm run start:server3\"",
