@@ -3,8 +3,9 @@ import express from "express";
 import http from "http";
 import { ServerSocket } from "./socket";
 import env from "./env";
+import router from "./router";
 const prisma = new PrismaClient();
-// import cors from "cors";
+import cors from "cors";
 // Create a Socket.IO server instance
 const port = env.PORT;
 
@@ -29,36 +30,19 @@ application.use((req, res, next) => {
 /** Parse the body of the request */
 
 /** Rules of our API */
-application.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+// application.use((req, res, next) => {
+//     res.header("Access-Control-Allow-Origin", "*");
+//     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
 
-    if (req.method == "OPTIONS") {
-        res.header("Access-Control-Allow-Methods", "PUT, POST, PATCH, DELETE, GET");
-        return res.status(200).json({});
-    }
+//     if (req.method == "OPTIONS") {
+//         res.header("Access-Control-Allow-Methods", "PUT, POST, PATCH, DELETE, GET");
+//         return res.status(200).json({});
+//     }
 
-    next();
-});
-
-/** Healthcheck */
-application.get("/ping", (req, res, next) => {
-    return res.status(200).json({ hello: "world!" });
-});
-
-/** Socket Information */
-application.get("/status", (req, res, next) => {
-    return res.status(200).json({ users: ServerSocket.instance.usersToID });
-});
-
-/** Error handling */
-application.use((req, res, next) => {
-    const error = new Error("Not found");
-
-    res.status(404).json({
-        message: error.message,
-    });
-});
+//     next();
+// });
+application.use(cors());
+application.use(router);
 
 /** Listen */
 httpServer.listen(port, () => console.info(`Server is running`));
