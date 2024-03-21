@@ -16,13 +16,13 @@ export class ServerSocket {
     constructor(server: HttpServer) {
         ServerSocket.instance = this;
         this.io = new Server(server, {
-            serveClient: false,
-            pingInterval: 10000,
-            pingTimeout: 5000,
-            cookie: false,
-            cors: {
-                origin: "*",
-            },
+            // serveClient: false,
+            // pingInterval: 10000,
+            // pingTimeout: 5000,
+            // cookie: false,
+            // cors: {
+            //     origin:[ "*","https://zerodha-copy-next.vercel.app"],
+            // },
         });
 
         this.io.on("connect", this.StartListeners);
