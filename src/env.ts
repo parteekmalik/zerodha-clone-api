@@ -1,5 +1,6 @@
 const env = {
     DATABASE_URL: process.env.DATABASE_URL as string,
+    PORT: Number(process.env.PORT) as number,
     DATABASE_TYPE: process.env.DATABASE_TYPE as string,
     NODE_ENV: process.env.NODE_ENV as string,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET as string,
