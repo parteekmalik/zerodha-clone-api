@@ -20,9 +20,9 @@ export class ServerSocket {
             // pingInterval: 10000,
             // pingTimeout: 5000,
             // cookie: false,
-            // cors: {
-            //     origin:[ "*","https://zerodha-copy-next.vercel.app"],
-            // },
+            cors: {
+                origin: "*",
+            },
         });
 
         this.io.on("connect", this.StartListeners);
