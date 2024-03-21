@@ -7,7 +7,7 @@ import WSbinance from "./orderExecution";
 import { TFormSchema } from "./FrmSchema";
 
 const prisma = new PrismaClient();
-const WSbin = new WSbinance();
+// const WSbin = new WSbinance();
 
 export class ServerSocket {
     public static instance: ServerSocket;
@@ -42,7 +42,7 @@ export class ServerSocket {
             // console.log("order recved ->", payload);
             const order = JSON.parse(payload.toString()) as TFormSchema;
             const TradingAccountId = this.IdToUser[socket.id];
-            WSbin.addOrder({ ...order, TradingAccountId });
+            // WSbin.addOrder({ ...order, TradingAccountId });
         });
         socket.on("authenticate", (payload: string) => {
             console.log(payload);
