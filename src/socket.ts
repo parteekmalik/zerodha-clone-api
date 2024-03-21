@@ -2,9 +2,10 @@ import { PrismaClient } from "@prisma/client";
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import { TFormSchema } from "./FrmSchema";
+import WSbinance from "./orderExecution";
 
 const prisma = new PrismaClient();
-// const WSbin = new WSbinance();
+const WSbin = new WSbinance();
 
 export class ServerSocket {
     public static instance: ServerSocket;

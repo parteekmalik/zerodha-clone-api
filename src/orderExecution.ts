@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import WebSocket from "ws";
 import { TPostReq, Twsbinance, WS_method, WS_response, orderType } from "./types";
 import { TFormSchema } from "./FrmSchema";
 import axios from "axios";
