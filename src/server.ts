@@ -4,18 +4,18 @@ import http from "http";
 import { ServerSocket } from "./socket";
 import env from "./env";
 const prisma = new PrismaClient();
-
+// import cors from "cors";
 // Create a Socket.IO server instance
 const port = env.PORT;
 
 const application = express();
 
+// application.use(cors());
 /** Server Handling */
 const httpServer = http.createServer(application);
 
 /** Start Socket */
-new ServerSocket(httpServer);
-
+const io = new ServerSocket(httpServer);
 /** Log the request */
 application.use((req, res, next) => {
     console.info(`METHOD: [${req.method}] - URL: [${req.url}] - IP: [${req.socket.remoteAddress}]`);

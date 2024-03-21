@@ -58,7 +58,7 @@ export default class WSbinance {
     }
 
     constructor() {
-        this.ws = new WebSocket("wss://stream.binance.us:9443/ws");
+        this.ws = new WebSocket("wss://stream.binance.com:9443/ws");
 
         // Add event listener for 'open' event
         this.ws.onopen = () => {
