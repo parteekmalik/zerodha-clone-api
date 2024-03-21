@@ -11,7 +11,7 @@ export default class WSbinance {
     private orders: Record<string, orderType> = {};
     private _subscriptions: string[] = [];
     private ws: WebSocket; // Define ws property
-    private _pendingSub: string[] = ["btcusdt@trade"];
+    private _pendingSub: string[] = [];
 
     private handleMessages(data: { s: string; p: string }) {
         if (!this.orders[data.s]) return;
