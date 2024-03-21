@@ -2,9 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import cors from "cors";
 import express from "express";
 import http from "http";
-import { Server } from "socket.io";
 import env from "./env";
 import router from "./router";
+import { ServerSocket } from "./socket";
 const prisma = new PrismaClient();
 // Create a Socket.IO server instance
 const port = env.PORT;
@@ -16,12 +16,7 @@ const application = express();
 const httpServer = http.createServer(application);
 
 /** Start Socket */
-const io = new Server(httpServer, {
-    cors: {
-        methods: ["GET", "POST"],
-        origin: ["*", "https://zerodha-copy-next.vercel.app", "https://zerodha-copy-next.vercel.app/zerodha"],
-    },
-});
+const io = new ServerSocket(httpServer);
 /** Log the request */
 application.use((req, res, next) => {
     console.info(`METHOD: [${req.method}] - URL: [${req.url}] - IP: [${req.socket.remoteAddress}]`);
