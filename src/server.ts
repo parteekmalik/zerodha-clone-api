@@ -2,10 +2,11 @@ import { PrismaClient } from "@prisma/client";
 import express from "express";
 import http from "http";
 import { ServerSocket } from "./socket";
+import env from "./env";
 const prisma = new PrismaClient();
 
 // Create a Socket.IO server instance
-const port = 3002;
+const port = env.PORT;
 
 const application = express();
 
