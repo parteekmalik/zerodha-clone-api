@@ -4,16 +4,19 @@
     "description": " A basic starter for an express.js API with Typescript",
     "main": "src/index.ts",
     "scripts": {
-        "start": "nodemon --exec ts-node src/server.ts",
+        "dev": "nodemon --exec ts-node src/server.ts",
         "querry": "ts-node src/querrymannuall.ts",
         "start:server1": "ts-node src/server.ts",
         "start:server2": "nodemon --exec ts-node src/index1.ts",
         "start:server3": "nodemon --exec ts-node src/matchMaking.ts",
-        "dev": "concurrently \"npm run start:server1\" \"npm run start:server2\" \"npm run start:server3\"",
+        "start": "concurrently \"npm run start:server1\" \"npm run start:server2\" \"npm run start:server3\"",
         "build": "tsc",
         "lint": "eslint --fix src test",
         "test": "jest",
+        "db:push": "prisma db push",
+        "db:studio": "prisma studio",
         "typecheck": "tsc --noEmit",
+        "postinstall": "prisma generate",
         "migrate": "prisma migrate dev"
     },
     "keywords": [],
@@ -25,14 +28,17 @@
     "license": "MIT",
     "dependencies": {
         "axios": "^1.6.2",
+        "chess.js": "^1.0.0-beta.8",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
         "express": "^4.18.2",
         "lodash": "^4.17.21",
         "moment": "^2.29.4",
+        "next-auth": "^4.24.7",
+        "socket.io": "^4.7.5",
         "ws": "^8.14.2",
         "zlibjs": "^0.3.1",
-        "zod": "^3.22.2"
+        "zod": "^3.22.4"
     },
     "devDependencies": {
         "@prisma/client": "^5.10.2",

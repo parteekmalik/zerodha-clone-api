@@ -16,5 +16,5 @@
     "test/**/*.ts",
     "src/extract.js",
     "puzzle_db/create_puzzle.ts"
-  ]
+, "src/env.ts"  ]
 }
