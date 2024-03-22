@@ -58,7 +58,7 @@ export default class WSbinance {
     }
 
     constructor() {
-        this.ws = new WebSocket("wss://stream.binance.com:9443/ws");
+        this.ws = new WebSocket("wss://stream.binance.us:9443/ws");
 
         // Add event listener for 'open' event
         this.ws.onopen = () => {
@@ -136,7 +136,7 @@ export default class WSbinance {
         this.sendPrint(msg);
     }
     private async getLTP(symbol: string) {
-        const url = "https://api.binance.com/api/v3/ticker/price?symbol=" + symbol;
+        const url = "https://api.binance.us/api/v3/ticker/price?symbol=" + symbol;
         const res = (await axios.get(url)).data as { symbol: string; price: string };
         console.log("getLTP " + symbol + " -> ", res);
         return Number(res.price);
