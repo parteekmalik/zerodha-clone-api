@@ -47,6 +47,7 @@ export default class WSbinance {
             }
             if (orders) this.sendCompletedOrderToDB(orders);
         }
+        if (!buyLimit.length && !buyStop.length && !sellLimit.length && !sellStop.length) this.unSubscribe([data.s + "@trade"]);
     }
     private async sendCompletedOrderToDB(order: { type: "BUY" | "SELL"; name: string; price: number; TradingAccountId: string; quantity: number; trigerType: $Enums.EtrigerType }[]) {
         console.log("orders sent to db ->", order);
