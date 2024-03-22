@@ -16,7 +16,7 @@ export default class WSbinance {
     private handleMessages(data: { s: string; p: string }) {
         if (!this.orders[data.s]) return;
         const { buyLimit, sellLimit, buyStop, sellStop } = this.orders[data.s];
-        // console.log(data, SymbolOrders);
+        // console.log(data);
         if (buyLimit.length && buyLimit[0].price >= Number(data.p)) {
             console.log("order matched buyLimit");
             const orders = [buyLimit.shift()] as TPostReq[];
@@ -58,7 +58,7 @@ export default class WSbinance {
     }
 
     constructor() {
-        this.ws = new WebSocket("wss://stream.binance.us:9443/ws");
+        this.ws = new WebSocket("wss://stream.binance.com:9443/ws");
 
         // Add event listener for 'open' event
         this.ws.onopen = () => {
@@ -112,7 +112,7 @@ export default class WSbinance {
         } else {
             params = params.filter((item) => this._subscriptions.includes(item));
         }
-        return params;
+        return params.map((item) => item.toLowerCase());
     }
     private subscribe(params: string[]) {
         const msg: Twsbinance = {
@@ -136,7 +136,7 @@ export default class WSbinance {
         this.sendPrint(msg);
     }
     private async getLTP(symbol: string) {
-        const url = "https://api.binance.us/api/v3/ticker/price?symbol=" + symbol;
+        const url = "https://api.binance.com/api/v3/ticker/price?symbol=" + symbol;
         const res = (await axios.get(url)).data as { symbol: string; price: string };
         console.log("getLTP " + symbol + " -> ", res);
         return Number(res.price);
@@ -152,7 +152,7 @@ export default class WSbinance {
             if (data.trigerType === "MARKET") {
                 this.marketorder(data);
             } else {
-                if (this._subscriptions.includes(name + "@trade")) this.subscribe([name + "@trade"]);
+                if (!this._subscriptions.includes(name + "@trade")) this.subscribe([name + "@trade"]);
 
                 if (!this.orders[name]) {
                     this.orders[name] = { buyLimit: [], sellLimit: [], buyStop: [], sellStop: [] };
