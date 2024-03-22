@@ -77,16 +77,16 @@ model VerificationToken {
 // app schema
 
 model TradingAccount {
-    id        String      @id @default(cuid())
-    balance   Float       @default(1000)
-    margin    Int         @default(100)
+    id        String   @id @default(cuid())
+    balance   Float    @default(1000)
+    margin    Int      @default(100)
     assets    Assets[]
-    statement FullOrder[]
-    User      User?       @relation(fields: [userId], references: [id])
+    statemnet Orders[]
+    User      User?    @relation(fields: [userId], references: [id])
     userId    String?
-    watchList String[]    @default(["", "", "", "", "", "", ""])
-    Pin0      String      @default("ETHUSDT")
-    Pin1      String      @default("BTCUSDT")
+    watchList String[] @default(["", "", "", "", "", "", ""])
+    Pin0      String   @default("ETHUSDT")
+    Pin1      String   @default("BTCUSDT")
 }
 
 // model Transection {
@@ -111,17 +111,17 @@ model Assets {
     tradingAccountId String?
 }
 
-model FullOrder {
+model Orders {
     id               String         @id @default(cuid())
     createsAt        DateTime       @default(now())
     name             String
     type             OrderType
-    status           orderStatus    @default(patial_filled)
     price            Float
     quantity         Float
+    status           OrderStatus    @default(open)
+    trigerType       EtrigerType
     sl               Int            @default(0)
     tp               Int            @default(0)
-    // suborders        Suborder[]
     TradingAccount   TradingAccount @relation(fields: [TradingAccountId], references: [id])
     TradingAccountId String
 }
@@ -137,18 +137,8 @@ enum OrderType {
     SELL
 }
 
-enum orderStatus {
-    patial_filled
+enum OrderStatus {
+    open
     completed
     cancelled
 }
-
-// model Suborder {
-//     id          String     @id @default(cuid())
-//     createsAt   DateTime   @default(now())
-//     name        String
-//     Price       Float
-//     Amount      Float
-//     FullOrder   FullOrder? @relation(fields: [fullOrderId], references: [id])
-//     fullOrderId String?
-// }

@@ -17,7 +17,7 @@ export type TPostReq = {
     name: string;
     type: "BUY" | "SELL";
     trigerType: "LIMIT" | "STOP" | "MARKET";
-    status: $Enums.orderStatus;
+    status: $Enums.OrderStatus;
     price: number;
     quantity: number;
     sl?: number;

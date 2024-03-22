@@ -22,7 +22,7 @@ export class ServerSocket {
             // cookie: false,
             cors: {
                 methods: ["GET", "POST"],
-                origin: ["*", "https://zerodha-copy-next.vercel.app", "https://zerodha-copy-next.vercel.app/zerodha"],
+                origin: ["*", "http://localhost", "http://localhost:3000", "http://localhost:3000/zerodha", "https://zerodha-copy-next.vercel.app", "https://zerodha-copy-next.vercel.app/zerodha"],
             },
         });
 
@@ -41,7 +41,7 @@ export class ServerSocket {
             // console.log("order recved ->", payload);
             const order = JSON.parse(payload.toString()) as TFormSchema;
             const TradingAccountId = this.IdToUser[socket.id];
-            WSbin.addOrder({ ...order, TradingAccountId });
+            WSbin.addOrder([{ ...order, TradingAccountId }]);
         });
         socket.on("authenticate", (payload: string) => {
             console.log(payload);

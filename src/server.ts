@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import cors from "cors";
 import express from "express";
 import http from "http";
+import { Server } from "socket.io";
 import env from "./env";
 import router from "./router";
 import { ServerSocket } from "./socket";
@@ -10,13 +11,12 @@ const prisma = new PrismaClient();
 const port = env.PORT;
 
 const application = express();
+application.use(cors());
 
 // application.use(cors());
 /** Server Handling */
 const httpServer = http.createServer(application);
 
-/** Start Socket */
-const io = new ServerSocket(httpServer);
 /** Log the request */
 application.use((req, res, next) => {
     console.info(`METHOD: [${req.method}] - URL: [${req.url}] - IP: [${req.socket.remoteAddress}]`);
@@ -41,7 +41,10 @@ application.use((req, res, next) => {
 
 //     next();
 // });
-application.use(cors());
+
+/** Start Socket */
+const io = new ServerSocket(httpServer);
+
 application.use(router);
 
 /** Listen */
