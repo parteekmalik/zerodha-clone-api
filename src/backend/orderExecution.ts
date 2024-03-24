@@ -1,12 +1,13 @@
 import { $Enums, PrismaClient } from "@prisma/client";
-import { TPostReq, Twsbinance, WS_method, WS_response, orderType } from "./types";
-import { TFormSchema } from "./FrmSchema";
+import { TPostReq, Twsbinance, WS_method, WS_response, orderType } from "../types";
+import { TFormSchema } from "../FrmSchema";
 import axios from "axios";
 import WebSocket from "ws";
 
 // const orders: Record<string, orderType> = { BTCUSDT: { asks: [{ price: 70000 }], bids: [{ price: 70600 }] ,Triger:{price:72000}[] }};
 
 export default class WSbinance {
+    public static instance: WSbinance;
     private prisma = new PrismaClient();
     private orders: Record<string, orderType> = {};
     private _subscriptions: string[] = [];
@@ -49,11 +50,12 @@ export default class WSbinance {
         }
         if (!buyLimit.length && !buyStop.length && !sellLimit.length && !sellStop.length) this.unSubscribe([data.s + "@trade"]);
     }
-    private async sendCompletedOrderToDB(order: { type: "BUY" | "SELL"; name: string; price: number; TradingAccountId: string; quantity: number; trigerType: $Enums.EtrigerType }[]) {
+    private async sendCompletedOrderToDB(order: { type: "BUY" | "SELL"; status: $Enums.OrderStatus; name: string; price: number; TradingAccountId: string; quantity: number; trigerType: $Enums.EtrigerType }[]) {
         console.log("orders sent to db ->", order);
+        // TODO: change create to update
         const res = await this.prisma.orders.createMany({
             data: order.map((item) => {
-                return { status: "completed", trigerType: item.trigerType, type: item.type, name: item.name, price: item.price, TradingAccountId: item.TradingAccountId, quantity: item.quantity };
+                return { status: item.status, trigerType: item.trigerType, type: item.type, name: item.name, price: item.price, TradingAccountId: item.TradingAccountId, quantity: item.quantity };
             }),
         });
     }
@@ -95,7 +97,8 @@ export default class WSbinance {
         this.addOrder(
             res.map((item) => {
                 return { orderType: item.type, trigerType: item.trigerType, quantity: item.quantity, price: item.price, sl: item.sl, tp: item.tp, symbolName: item.name, marketType: "SPOT", TradingAccountId: item.TradingAccountId };
-            })
+            }),
+            true
         );
     }
     private sendPrint(payload: Twsbinance) {
@@ -144,31 +147,29 @@ export default class WSbinance {
     }
     private async marketorder(data: TFormSchema) {
         const price = await this.getLTP(data.symbolName);
-        this.sendCompletedOrderToDB([{ trigerType: "MARKET", type: data.orderType, name: data.symbolName, TradingAccountId: data.TradingAccountId, price, quantity: data.quantity }]);
+        this.sendCompletedOrderToDB([{ trigerType: "MARKET", status: "completed", type: data.orderType, name: data.symbolName, TradingAccountId: data.TradingAccountId, price, quantity: data.quantity }]);
     }
-    addOrder(data: TFormSchema[]) {
+    addOrder(data: TFormSchema[], isFromDB: boolean) {
         console.log("order recved WSbinance ->", data);
         data.map((data) => {
             const { symbolName: name, orderType: type, trigerType } = data;
-            if (data.trigerType === "MARKET") {
-                this.marketorder(data);
+            if (!this._subscriptions.includes(name + "@trade")) this.subscribe([name + "@trade"]);
+
+            if (!this.orders[name]) {
+                this.orders[name] = { buyLimit: [], sellLimit: [], buyStop: [], sellStop: [] };
+            }
+            const symbolOrders = this.orders[name];
+
+            const orderList = trigerType === "LIMIT" ? (type === "BUY" ? symbolOrders.buyLimit : symbolOrders.sellLimit) : type === "BUY" ? symbolOrders.buyStop : symbolOrders.sellStop;
+            // fix ???
+            const tempOrder: TPostReq = { sl: data.sl, tp: data.tp, trigerType, status: "open", TradingAccountId: data.TradingAccountId, name: data.symbolName, type: data.orderType, quantity: data.quantity, price: data.price };
+            orderList.push(tempOrder);
+            if (!isFromDB) this.sendCompletedOrderToDB([{ ...tempOrder, status: "open" }]);
+
+            if (trigerType === "LIMIT") {
+                orderList.sort((a, b) => (type === "BUY" ? b.price - a.price : a.price - b.price));
             } else {
-                if (!this._subscriptions.includes(name + "@trade")) this.subscribe([name + "@trade"]);
-
-                if (!this.orders[name]) {
-                    this.orders[name] = { buyLimit: [], sellLimit: [], buyStop: [], sellStop: [] };
-                }
-                const symbolOrders = this.orders[name];
-
-                const orderList = trigerType === "LIMIT" ? (type === "BUY" ? symbolOrders.buyLimit : symbolOrders.sellLimit) : type === "BUY" ? symbolOrders.buyStop : symbolOrders.sellStop;
-                // fix ???
-                orderList.push({ sl: data.sl, tp: data.tp, trigerType, status: "open", TradingAccountId: data.TradingAccountId, name: data.symbolName, type: data.orderType, quantity: data.quantity, price: data.price });
-
-                if (trigerType === "LIMIT") {
-                    orderList.sort((a, b) => (type === "BUY" ? b.price - a.price : a.price - b.price));
-                } else {
-                    orderList.sort((a, b) => b.price - a.price);
-                }
+                orderList.sort((a, b) => b.price - a.price);
             }
         });
 
