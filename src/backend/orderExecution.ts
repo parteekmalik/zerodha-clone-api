@@ -1,105 +1,23 @@
-import { $Enums, PrismaClient } from "@prisma/client";
-import { TPostReq, Twsbinance, WS_method, WS_response, orderType } from "../types";
-import { TFormSchema } from "../FrmSchema";
-import axios from "axios";
+import { PrismaClient } from "@prisma/client";
 import WebSocket from "ws";
-import getLTP from "../utils/getLTP";
+import { TPostReq, Twsbinance, WS_method, WS_response } from "../types";
+import Orders from "./orders";
 
 // const orders: Record<string, orderType> = { BTCUSDT: { asks: [{ price: 70000 }], bids: [{ price: 70600 }] ,Triger:{price:72000}[] }};
 const prisma = new PrismaClient();
-async function sendCompletedOrderToDB(order: { type: "BUY" | "SELL"; status: $Enums.OrderStatus; name: string; price: number; TradingAccountId: string; quantity: number; triggerType: $Enums.EtriggerType }) {
-    console.log("orders sent to db ->", order);
-    // TODO: change create to update
-    const res = await prisma.orders.create({
-        data: { status: order.status, triggerType: order.triggerType, type: order.type, name: order.name, price: order.price, TradingAccountId: order.TradingAccountId, quantity: order.quantity },
-    });
 
-    console.log(res);
-    return res;
-}
-async function updateOrders(orders: TPostReq | TPostReq[]) {
-    console.log("orders sent to db ->", orders);
+// export async function sendCompletedOrderToDB(order: { type: "BUY" | "SELL"; status: $Enums.OrderStatus; name: string; price: number; TradingAccountId: string; quantity: number; triggerType: $Enums.EtriggerType }) {
+//     console.log("orders sent to db ->", order);
+//     // TODO: change create to update
+//     const res = await prisma.orders.create({
+//         data: { status: order.status, triggerType: order.triggerType, type: order.type, name: order.name, price: order.price, TradingAccountId: order.TradingAccountId, quantity: order.quantity },
+//     });
 
-    // If order is not an array, convert it to an array containing the single order
-    if (!Array.isArray(orders)) {
-        orders = [orders];
-    }
+//     console.log(res);
+//     return res;
+// }
 
-    // TODO: Ensure `prisma` is defined correctly
-    const res = await prisma.orders.updateMany({
-        where: {
-            id: {
-                in: orders.map((order) => order.id),
-            },
-        },
-        data: { status: "completed" },
-    });
 
-    console.log(res);
-    return res;
-}
-function getOrderList(name: string, orders: Record<string, orderType>) {
-    if (!orders[name]) orders[name] = { BUYLIMIT: [], SELLLIMIT: [], BUYSTOP: [], SELLSTOP: [] };
-    return orders[name];
-}
-class Orders {
-    public orders: Record<string, orderType> = {};
-    public count = 0;
-    constructor() {
-        this.collectOrdersFromDB();
-    }
-    private async collectOrdersFromDB() {
-        const res = await prisma.orders.findMany({
-            where: {
-                status: "open",
-            },
-        });
-
-        res.map((item) => getOrderList(item.name, this.orders)[(item.type + item.triggerType) as keyof orderType].push(item));
-    }
-    completeOrders(data: { s: string; p: string }) {
-        if (!this.orders[data.s]) return;
-        const { BUYLIMIT, SELLLIMIT, BUYSTOP, SELLSTOP } = this.orders[data.s];
-        // console.log(data);
-        // TODO: move code to orders class
-        const orders = [] as TPostReq[];
-        while (BUYLIMIT.length && BUYLIMIT[0].price >= Number(data.p)) {
-            console.log("order matched buyLimit");
-            this.count--;
-            orders.push(BUYLIMIT.shift() as TPostReq);
-        }
-        while (SELLLIMIT.length && SELLLIMIT[0].price <= Number(data.p)) {
-            console.log("order matched sellLimit");
-            this.count--;
-            orders.push(SELLLIMIT.shift() as TPostReq);
-        }
-        while (SELLSTOP.length && SELLSTOP[0].price >= Number(data.p)) {
-            console.log("order matched sellStop");
-            this.count--;
-            orders.push(SELLSTOP.shift() as TPostReq);
-        }
-        while (BUYSTOP.length && BUYSTOP[0].price <= Number(data.p)) {
-            console.log("order matched buyStop");
-            this.count--;
-            orders.push(BUYLIMIT.shift() as TPostReq);
-        }
-        if (orders) updateOrders(orders);
-        if (!BUYLIMIT.length && !BUYSTOP.length && !SELLLIMIT.length && !SELLSTOP.length) return true;
-    }
-    async addOrders(data: TPostReq) {
-        const { name, type, triggerType } = data;
-        const orderList = getOrderList(name, this.orders)[(type + triggerType) as keyof orderType];
-
-        orderList.push(data);
-        this.count++;
-
-        if (triggerType === "LIMIT") {
-            orderList.sort((a, b) => (type === "BUY" ? b.price - a.price : a.price - b.price));
-        } else {
-            orderList.sort((a, b) => b.price - a.price);
-        }
-    }
-}
 export default class WSbinance {
     public static instance: WSbinance;
     public orders = new Orders();
