@@ -5,14 +5,15 @@ import http from "http";
 import { env } from "process";
 import { Server } from "socket.io";
 import WSbinance from "./orderExecution";
-import router from "../router";
+import router from "./router";
+import bodyParser from "body-parser";
 const prisma = new PrismaClient();
 // Create a Socket.IO server instance
-const port = env.PORT;
+const port = 3001;
 
 const application = express();
 application.use(cors());
-
+application.use(bodyParser.json());
 // application.use(cors());
 /** Server Handling */
 const httpServer = http.createServer(application);

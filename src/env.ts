@@ -7,5 +7,6 @@ const env = {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL as string,
     DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID as string,
     DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET as string,
+    BACKEND_URL: process.env.BACKEND_URL as string,
 };
 export default env;

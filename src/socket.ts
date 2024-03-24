@@ -4,6 +4,7 @@ import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import { TFormSchema } from "./FrmSchema";
 import { TPostReq } from "./types";
+import env from "./env";
 
 export class ServerSocket {
     public static instance: ServerSocket;
@@ -41,7 +42,7 @@ export class ServerSocket {
             const order = JSON.parse(payload.toString()) as TFormSchema;
             const TradingAccountId = this.IdToUser[socket.id];
 
-            this.addOrder([{ ...order, TradingAccountId }]);
+            this.addOrder({ ...order, TradingAccountId });
         });
         socket.on("authenticate", (payload: string) => {
             console.log(payload);
@@ -101,16 +102,11 @@ export class ServerSocket {
         const price = await this.getLTP(data.symbolName);
         this.sendCompletedOrderToDB([{ trigerType: "MARKET", status: "completed", type: data.orderType, name: data.symbolName, TradingAccountId: data.TradingAccountId, price, quantity: data.quantity }]);
     }
-    private addOrder(data: TFormSchema[]) {
+    private addOrder(data: TFormSchema) {
         console.log("order recved WSbinance ->", data);
-        data.map((data) => {
-            const { symbolName: name, orderType: type, trigerType } = data;
-            if (data.trigerType === "MARKET") {
-                this.marketorder(data);
-            } else {
-                const tempOrder: TPostReq = { sl: data.sl, tp: data.tp, trigerType, status: "open", TradingAccountId: data.TradingAccountId, name: data.symbolName, type: data.orderType, quantity: data.quantity, price: data.price };
-                this.sendCompletedOrderToDB([{ ...tempOrder, status: "open" }]);
-            }
-        });
+        const { symbolName: name, orderType: type, trigerType } = data;
+        if (data.trigerType === "MARKET") {
+            this.marketorder(data);
+        } else axios.post(env.BACKEND_URL, [data]).catch((error) => console.log(error));
     }
 }

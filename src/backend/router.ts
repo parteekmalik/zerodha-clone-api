@@ -14,9 +14,11 @@ router.get("/ping", (req, res, next) => {
     return res.status(200).json({ hello: "world!" });
 });
 router.post("/addorder", (req, res, next) => {
-    const data = JSON.parse(req.body.toString()) as TFormSchema[];
-    io.addOrder(data, false);
-    return res.status(200).json({ hello: "world!" });
+    console.log("addrder ->", req.body, typeof req.body);
+    const data = req.body as TFormSchema;
+    // const data = JSON.parse(req.body.toString()) as TFormSchema[];
+    io.addOrder(data);
+    return res.status(200).json({ hello: data });
 });
 /** Error handling */
 router.use((req, res, next) => {
@@ -27,3 +29,4 @@ router.use((req, res, next) => {
     });
 });
 export default router;
+ 

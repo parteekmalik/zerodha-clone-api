@@ -14,20 +14,22 @@ export type WS_method = "SUBSCRIBE" | "UNSUBSCRIBE";
 export type WS_response = { result: null | string[]; id: number } | { s: string; p: string };
 
 export type TPostReq = {
+    id: string;
+    createsAt: Date;
     name: string;
-    type: "BUY" | "SELL";
-    trigerType: "LIMIT" | "STOP" | "MARKET";
-    status: $Enums.OrderStatus;
+    type: $Enums.OrderType;
     price: number;
     quantity: number;
-    sl?: number;
-    tp?: number;
+    status: $Enums.OrderStatus;
+    trigerType: $Enums.EtrigerType;
+    sl: number;
+    tp: number;
     TradingAccountId: string;
 };
 
 export type orderType = {
-    buyLimit: TPostReq[];
-    sellLimit: TPostReq[];
-    buyStop: TPostReq[];
-    sellStop: TPostReq[];
+    BUYLIMIT: TPostReq[];
+    SELLLIMIT: TPostReq[];
+    BUYSTOP: TPostReq[];
+    SELLSTOP: TPostReq[];
 };
