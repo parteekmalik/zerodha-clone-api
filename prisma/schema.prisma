@@ -113,20 +113,27 @@ model Assets {
 
 model Orders {
     id               String         @id @default(cuid())
-    createsAt        DateTime       @default(now())
+    createdAt        DateTime       @default(now())
     name             String
     type             OrderType
     price            Float
     quantity         Float
     status           OrderStatus    @default(open)
-    trigerType       EtrigerType
+    triggerType      EtriggerType // Corrected typo from "trigerType" to "triggerType"
     sl               Int            @default(0)
     tp               Int            @default(0)
     TradingAccount   TradingAccount @relation(fields: [TradingAccountId], references: [id])
     TradingAccountId String
 }
 
-enum EtrigerType {
+model OrderMessageQ {
+    createdAt DateTime    @default(now())
+    id        String      @id @default(cuid())
+    Orders    String
+    type      OrderStatus
+}
+
+enum EtriggerType {
     LIMIT
     STOP
     MARKET

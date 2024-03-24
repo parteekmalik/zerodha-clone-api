@@ -5,6 +5,7 @@ import { Server, Socket } from "socket.io";
 import { TFormSchema } from "./FrmSchema";
 import { TPostReq } from "./types";
 import env from "./env";
+import getLTP from "./utils/getLTP";
 
 export class ServerSocket {
     public static instance: ServerSocket;
@@ -16,10 +17,6 @@ export class ServerSocket {
     constructor(server: HttpServer) {
         ServerSocket.instance = this;
         this.io = new Server(server, {
-            // serveClient: false,
-            // pingInterval: 10000,
-            // pingTimeout: 5000,
-            // cookie: false,
             cors: {
                 methods: ["GET", "POST"],
                 origin: ["*", "http://localhost", "http://localhost:3000", "http://localhost:3000/zerodha", "https://zerodha-copy-next.vercel.app", "https://zerodha-copy-next.vercel.app/zerodha"],
@@ -59,11 +56,6 @@ export class ServerSocket {
             console.log(this.usersToID);
             console.log(this.IdToUser);
         });
-        // socket.on("handshake", (payload: { TradingAccountId: string }) => {
-        //     console.info("Handshake received from: " + socket.id);
-        //     console.info(" payload 'handshake' ->", JSON.stringify(payload));
-        //     this.OnHandshake(payload, socket);
-        // });
 
         socket.on("disconnect", (payload) => {
             console.info("payload 'Disconnect' : ", payload);
@@ -80,32 +72,30 @@ export class ServerSocket {
         return Object.keys(this.usersToID).find((uid) => this.usersToID[uid] === id);
     };
 
-    SendMessage = (name: string, id: string, payload?: Object) => {
+    SendMessage = (name: string, TradingAccountId: string, payload?: Object) => {
+        const id = this.usersToID[TradingAccountId];
         console.info("Emitting event: " + name + " to", id);
+
         payload ? this.io.to(id).emit(name, payload) : this.io.to(id).emit(name);
     };
-    private async sendCompletedOrderToDB(order: { type: "BUY" | "SELL"; status: $Enums.OrderStatus; name: string; price: number; TradingAccountId: string; quantity: number; trigerType: $Enums.EtrigerType }[]) {
+    private async sendCompletedOrderToDB(order: { type: "BUY" | "SELL"; status: $Enums.OrderStatus; name: string; price: number; TradingAccountId: string; quantity: number; triggerType: $Enums.EtriggerType }) {
         console.log("orders sent to db ->", order);
-        const res = await this.prisma.orders.createMany({
-            data: order.map((item) => {
-                return { status: item.status, trigerType: item.trigerType, type: item.type, name: item.name, price: item.price, TradingAccountId: item.TradingAccountId, quantity: item.quantity };
-            }),
+        const res = await this.prisma.orders.create({
+            data: { status: order.status, triggerType: order.triggerType, type: order.type, name: order.name, price: order.price, TradingAccountId: order.TradingAccountId, quantity: order.quantity },
         });
     }
-    private async getLTP(symbol: string) {
-        const url = "https://api.binance.us/api/v3/ticker/price?symbol=" + symbol;
-        const res = (await axios.get(url)).data as { symbol: string; price: string };
-        console.log("getLTP " + symbol + " -> ", res);
-        return Number(res.price);
-    }
     private async marketorder(data: TFormSchema) {
-        const price = await this.getLTP(data.symbolName);
-        this.sendCompletedOrderToDB([{ trigerType: "MARKET", status: "completed", type: data.orderType, name: data.symbolName, TradingAccountId: data.TradingAccountId, price, quantity: data.quantity }]);
+        const price = await getLTP(data.symbolName);
+        this.sendCompletedOrderToDB({ triggerType: "MARKET", status: "completed", type: data.orderType, name: data.symbolName, TradingAccountId: data.TradingAccountId, price, quantity: data.quantity });
+    }
+    private orderSubmitComform(){
+        
     }
     private addOrder(data: TFormSchema) {
         console.log("order recved WSbinance ->", data);
-        const { symbolName: name, orderType: type, trigerType } = data;
-        if (data.trigerType === "MARKET") {
+
+        const { symbolName: name, orderType: type, trigerType: triggerType } = data;
+        if (triggerType === "MARKET") {
             this.marketorder(data);
         } else axios.post(env.BACKEND_URL, [data]).catch((error) => console.log(error));
     }

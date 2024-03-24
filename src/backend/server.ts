@@ -7,7 +7,6 @@ import { Server } from "socket.io";
 import WSbinance from "./orderExecution";
 import router from "./router";
 import bodyParser from "body-parser";
-const prisma = new PrismaClient();
 // Create a Socket.IO server instance
 const port = 3001;
 

@@ -15,17 +15,17 @@ export type WS_response = { result: null | string[]; id: number } | { s: string;
 
 export type TPostReq = {
     id: string;
-    createsAt: Date;
+    createdAt: Date;
     name: string;
     type: $Enums.OrderType;
     price: number;
     quantity: number;
     status: $Enums.OrderStatus;
-    trigerType: $Enums.EtrigerType;
+    triggerType: $Enums.EtriggerType;
     sl: number;
     tp: number;
     TradingAccountId: string;
-};
+}
 
 export type orderType = {
     BUYLIMIT: TPostReq[];

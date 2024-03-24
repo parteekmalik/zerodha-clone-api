@@ -47,6 +47,32 @@ application.use((req, res, next) => {
 /** Start Socket */
 const io = new ServerSocket(httpServer);
 
+setTimeout(async () => {
+    const res = await prisma.orderMessageQ.count();
+    if (res) {
+        const messages = await prisma.orderMessageQ.findMany({});
+        const orders = await prisma.orders.findMany({
+            where: {
+                id: {
+                    in: messages.map((item) => item.Orders),
+                },
+            },
+        });
+        orders.map((item) => {
+            const message = messages.filter((i) => i.Orders === item.id)[0];
+            const payload = { ...message, item };
+            io.SendMessage("message", item?.TradingAccountId, payload);
+        });
+        prisma.orderMessageQ.deleteMany({
+            where: {
+                id: {
+                    in: messages.map((i) => i.id),
+                },
+            },
+        });
+    }
+}, 1000);
+
 application.use(router);
 
 /** Listen */
