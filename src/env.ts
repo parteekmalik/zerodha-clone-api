@@ -10,5 +10,7 @@ const env = {
     BACKEND_URL: process.env.BACKEND_URL as string,
     BINANCE_WS_URL: process.env.BINANCE_WS_URL as string,
     BINANCE_LTP_URL: process.env.BINANCE_LTP_URL as string,
+    DB_TIME_INTERVAL: Number(process.env.DB_TIME_INTERVAL) as number,
 };
+
 export default env;

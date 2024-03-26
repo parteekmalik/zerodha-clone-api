@@ -73,7 +73,7 @@ setInterval(async () => {
         });
         console.log("messagedeleted->", res);
     }
-}, 1000);
+}, env.DB_TIME_INTERVAL);
 
 application.use(router);
 

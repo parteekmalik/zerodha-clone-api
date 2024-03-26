@@ -3,6 +3,7 @@ import WSbinance from "./orderExecution";
 import { TFormSchema } from "../FrmSchema";
 import { PrismaClient } from "@prisma/client";
 import { identity } from "lodash";
+import env from "../env";
 const prisma = new PrismaClient();
 
 const router = express.Router();
@@ -18,7 +19,7 @@ const checkNewOrders = async () => {
         io.addOrder(orders);
     }
 };
-setInterval(checkNewOrders, 1000);
+setInterval(checkNewOrders, env.DB_TIME_INTERVAL);
 
 router.get("/", (req, res) => {
     res.send({ response: "Server is up and running." }).status(200);
