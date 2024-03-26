@@ -76,6 +76,7 @@ export class ServerSocket {
     SendMessage = (name: string, TradingAccountId: string, payload: Object) => {
         const id = this.usersToID[TradingAccountId];
         console.info("Emitting event: " + name + " to", id);
+        console.log(TradingAccountId, id, this.usersToID);
 
         this.io.to(id).emit(name, payload);
     };

@@ -71,7 +71,7 @@ setInterval(async () => {
                 },
             },
         });
-        console.log(res);
+        console.log("messagedeleted->", res);
     }
 }, 1000);
 
