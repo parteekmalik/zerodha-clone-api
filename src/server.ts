@@ -62,7 +62,7 @@ setInterval(async () => {
         orders.map((item) => {
             const message = messages.filter((i) => i.Orders === item.id)[0];
             const payload = { ...message, item };
-            io.SendMessage("message", item.TradingAccountId, payload);
+            io.SendMessage("notification", item.TradingAccountId, payload);
         });
         const res = await prisma.orderMessageQ.deleteMany({
             where: {
