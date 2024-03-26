@@ -17,7 +17,6 @@ const prisma = new PrismaClient();
 //     return res;
 // }
 
-
 export default class WSbinance {
     public static instance: WSbinance;
     public orders = new Orders();
@@ -97,11 +96,10 @@ export default class WSbinance {
         this.sendPrint(msg);
     }
     async addOrder(data: TPostReq | TPostReq[]) {
-        console.log("order recved WSbinance ->", data);
         if (!Array.isArray(data)) data = [data];
 
         data.map(async (data) => {
-            const { name, type, triggerType } = data;
+            const { name } = data;
 
             if (!this._subscriptions.includes(name + "@trade")) this.subscribe([name + "@trade"]);
 

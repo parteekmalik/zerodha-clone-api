@@ -13,7 +13,7 @@ export async function updateOrders(orders: TPostReq | TPostReq[]) {
         orders = [orders];
     }
 
-    // TODO: Ensure `prisma` is defined correctly
+    // TODO: ccreate a messageQ
     const res = await prisma.orders.updateMany({
         where: {
             id: {
@@ -21,6 +21,11 @@ export async function updateOrders(orders: TPostReq | TPostReq[]) {
             },
         },
         data: { status: "completed" },
+    });
+    await prisma.orderMessageQ.createMany({
+        data: orders.map((order) => {
+            return { Orders: order.id, type: "completed" };
+        }),
     });
 
     console.log(res);
@@ -30,7 +35,7 @@ export default class Orders {
     public orders: Record<string, orderType> = {};
     public count = 0;
     constructor() {
-        this.collectOrdersFromDB();
+        // this.collectOrdersFromDB();
     }
     private async collectOrdersFromDB() {
         const res = await prisma.orders.findMany({

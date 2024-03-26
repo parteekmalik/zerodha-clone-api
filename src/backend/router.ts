@@ -8,15 +8,17 @@ const prisma = new PrismaClient();
 const router = express.Router();
 /** Start Socket */
 const io = new WSbinance();
-
-setTimeout(async () => {
+const checkNewOrders = async () => {
     const res = await prisma.orders.count({ where: { status: "open" } });
     if (res > io.orders.count) {
+        console.log("count ->", res);
         const orders = await prisma.orders.findMany({ where: { status: "open" } });
+        console.log("new orders found WSbinance ->", orders);
 
         io.addOrder(orders);
     }
-}, 1000);
+};
+setInterval(checkNewOrders, 1000);
 
 router.get("/", (req, res) => {
     res.send({ response: "Server is up and running." }).status(200);

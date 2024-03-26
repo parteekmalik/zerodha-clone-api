@@ -9,7 +9,7 @@
         "start:server": "ts-node src/server.ts",
         "start:server1": "ts-node src/backend/server.ts",
         "start": "concurrently \"npm run start:server1\" \"npm run start:server\" ",
-        "start:dev": "concurrently \"npm run start:dev\" \"npm run start:dev1\" ",
+        "startdev": "concurrently \"npm run start:dev\" \"npm run start:dev1\" ",
         "build": "tsc",
         "lint": "eslint --fix src test",
         "test": "jest",

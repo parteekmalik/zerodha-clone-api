@@ -6,6 +6,7 @@ import { TFormSchema } from "./FrmSchema";
 import { TPostReq } from "./types";
 import env from "./env";
 import getLTP from "./utils/getLTP";
+import { error } from "console";
 
 export class ServerSocket {
     public static instance: ServerSocket;
@@ -79,24 +80,41 @@ export class ServerSocket {
         payload ? this.io.to(id).emit(name, payload) : this.io.to(id).emit(name);
     };
     private async sendCompletedOrderToDB(order: { type: "BUY" | "SELL"; status: $Enums.OrderStatus; name: string; price: number; TradingAccountId: string; quantity: number; triggerType: $Enums.EtriggerType }) {
-        console.log("orders sent to db ->", order);
+        console.log("orders sent to db from client ws ->", order);
+
         const res = await this.prisma.orders.create({
             data: { status: order.status, triggerType: order.triggerType, type: order.type, name: order.name, price: order.price, TradingAccountId: order.TradingAccountId, quantity: order.quantity },
         });
+        await this.prisma.orderMessageQ.create({
+            data: {
+                type: "open",
+                Orders: res.id,
+            },
+        });
+        if (order.status === "completed")
+            await this.prisma.orderMessageQ.create({
+                data: {
+                    type: "completed",
+                    Orders: res.id,
+                },
+            });
     }
     private async marketorder(data: TFormSchema) {
         const price = await getLTP(data.symbolName);
         this.sendCompletedOrderToDB({ triggerType: "MARKET", status: "completed", type: data.orderType, name: data.symbolName, TradingAccountId: data.TradingAccountId, price, quantity: data.quantity });
     }
-    private orderSubmitComform(){
-        
-    }
+    private orderSubmitComform() {}
     private addOrder(data: TFormSchema) {
-        console.log("order recved WSbinance ->", data);
+        console.log("order recved socket ->", data);
 
         const { symbolName: name, orderType: type, trigerType: triggerType } = data;
         if (triggerType === "MARKET") {
             this.marketorder(data);
-        } else axios.post(env.BACKEND_URL, [data]).catch((error) => console.log(error));
+        } else
+            axios.post(env.BACKEND_URL, [data]).catch((error) => {
+                // TODO: ccreate a messageQ
+
+                this.sendCompletedOrderToDB({ triggerType, status: "open", type: data.orderType, name: data.symbolName, TradingAccountId: data.TradingAccountId, price: data.price, quantity: data.quantity });
+            });
     }
 }

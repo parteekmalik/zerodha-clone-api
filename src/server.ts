@@ -47,7 +47,7 @@ application.use((req, res, next) => {
 /** Start Socket */
 const io = new ServerSocket(httpServer);
 
-setTimeout(async () => {
+setInterval(async () => {
     const res = await prisma.orderMessageQ.count();
     if (res) {
         const messages = await prisma.orderMessageQ.findMany({});
