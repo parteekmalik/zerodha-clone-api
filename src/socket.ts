@@ -3,7 +3,7 @@ import axios from "axios";
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import { TFormSchema } from "./FrmSchema";
-import { TPostReq } from "./types";
+import { TPostReq } from "./utils/types";
 import env from "./env";
 import getLTP from "./utils/getLTP";
 import { error } from "console";
@@ -73,11 +73,11 @@ export class ServerSocket {
         return Object.keys(this.usersToID).find((uid) => this.usersToID[uid] === id);
     };
 
-    SendMessage = (name: string, TradingAccountId: string, payload?: Object) => {
+    SendMessage = (name: string, TradingAccountId: string, payload: Object) => {
         const id = this.usersToID[TradingAccountId];
         console.info("Emitting event: " + name + " to", id);
 
-        payload ? this.io.to(id).emit(name, payload) : this.io.to(id).emit(name);
+        this.io.to(id).emit(name, payload);
     };
     private async sendCompletedOrderToDB(order: { type: "BUY" | "SELL"; status: $Enums.OrderStatus; name: string; price: number; TradingAccountId: string; quantity: number; triggerType: $Enums.EtriggerType }) {
         console.log("orders sent to db from client ws ->", order);

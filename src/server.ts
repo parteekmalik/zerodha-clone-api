@@ -58,18 +58,20 @@ setInterval(async () => {
                 },
             },
         });
+        console.log("new messageQ found ->", messages);
         orders.map((item) => {
             const message = messages.filter((i) => i.Orders === item.id)[0];
             const payload = { ...message, item };
-            io.SendMessage("message", item?.TradingAccountId, payload);
+            io.SendMessage("message", item.TradingAccountId, payload);
         });
-        prisma.orderMessageQ.deleteMany({
+        const res = await prisma.orderMessageQ.deleteMany({
             where: {
                 id: {
                     in: messages.map((i) => i.id),
                 },
             },
         });
+        console.log(res);
     }
 }, 1000);
 

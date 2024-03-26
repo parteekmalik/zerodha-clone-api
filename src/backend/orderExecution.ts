@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import WebSocket from "ws";
-import { TPostReq, Twsbinance, WS_method, WS_response } from "../types";
+import { TPostReq, Twsbinance, WS_method, WS_response } from "../utils/types";
 import Orders from "./orders";
 import env from "../env";
 

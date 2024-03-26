@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { TPostReq, orderType } from "../types";
+import { TPostReq, orderType } from "../utils/types";
 const prisma = new PrismaClient();
 function getOrderList(name: string, orders: Record<string, orderType>) {
     if (!orders[name]) orders[name] = { BUYLIMIT: [], SELLLIMIT: [], BUYSTOP: [], SELLSTOP: [] };
