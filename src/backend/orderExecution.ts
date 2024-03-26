@@ -63,7 +63,7 @@ export default class WSbinance {
     }
     private sendPrint(payload: Twsbinance) {
         if (payload.method !== "LIST_SUBSCRIPTIONS") {
-            this.updateSubsctription([...this._subscriptions, ...payload.params]);
+            if (payload.method === "SUBSCRIBE") this.updateSubsctription([...this._subscriptions, ...payload.params]);
             payload.params = payload.params.map((i) => i.toLowerCase());
         }
         console.log("sendPrint ->", payload);
