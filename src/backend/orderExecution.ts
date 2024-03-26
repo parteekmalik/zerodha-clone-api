@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import WebSocket from "ws";
 import { TPostReq, Twsbinance, WS_method, WS_response } from "../types";
 import Orders from "./orders";
+import env from "../env";
 
 // const orders: Record<string, orderType> = { BTCUSDT: { asks: [{ price: 70000 }], bids: [{ price: 70600 }] ,Triger:{price:72000}[] }};
 const prisma = new PrismaClient();
@@ -30,7 +31,7 @@ export default class WSbinance {
     }
 
     constructor() {
-        this.ws = new WebSocket("wss://stream.binance.us:9443/ws");
+        this.ws = new WebSocket(env.BINANCE_WS_URL);
 
         // Add event listener for 'open' event
         this.ws.onopen = () => {
@@ -48,7 +49,7 @@ export default class WSbinance {
             if ("id" in data) {
                 if (data.id !== 3) this.sendPrint({ method: "LIST_SUBSCRIPTIONS", id: 3 });
                 else if (data.result) {
-                    this._subscriptions = data.result;
+                    this.updateSubsctription(data.result);
                 }
                 console.log(msg.data);
             } else {
@@ -56,10 +57,16 @@ export default class WSbinance {
             }
         };
     }
-
+    private updateSubsctription(list: string[]) {
+        this._subscriptions = list.map((i) => i.slice(0, i.length - 6).toUpperCase() + "@trade");
+        console.log("this._subscriptions -> ", this._subscriptions);
+    }
     private sendPrint(payload: Twsbinance) {
-        if (payload.method !== "LIST_SUBSCRIPTIONS") this._subscriptions = [...this._subscriptions, ...payload.params.filter((item) => !this._subscriptions.includes(item))];
-        console.log(payload);
+        if (payload.method !== "LIST_SUBSCRIPTIONS") {
+            this.updateSubsctription([...this._subscriptions, ...payload.params]);
+            payload.params = payload.params.map((i) => i.toLowerCase());
+        }
+        console.log("sendPrint ->", payload);
         this.ws.send(JSON.stringify(payload));
     }
     private removeParams(type: WS_method, params: string[]) {
@@ -101,7 +108,10 @@ export default class WSbinance {
         data.map(async (data) => {
             const { name } = data;
 
-            if (!this._subscriptions.includes(name + "@trade")) this.subscribe([name + "@trade"]);
+            if (!this._subscriptions.includes(name + "@trade")) {
+                this.subscribe([name + "@trade"]);
+                console.log(this._subscriptions, name + "@trade");
+            }
 
             this.orders.addOrders(data);
         });

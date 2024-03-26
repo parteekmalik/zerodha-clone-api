@@ -8,5 +8,6 @@ const env = {
     DISCORD_CLIENT_ID: process.env.DISCORD_CLIENT_ID as string,
     DISCORD_CLIENT_SECRET: process.env.DISCORD_CLIENT_SECRET as string,
     BACKEND_URL: process.env.BACKEND_URL as string,
+    BINANCE_WS_URL: process.env.BINANCE_WS_URL as string,
 };
 export default env;

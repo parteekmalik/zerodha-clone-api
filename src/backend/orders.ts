@@ -53,26 +53,29 @@ export default class Orders {
         // TODO: move code to orders class
         const orders = [] as TPostReq[];
         while (BUYLIMIT.length && BUYLIMIT[0].price >= Number(data.p)) {
-            console.log("order matched buyLimit");
+            // console.log("order matched buyLimit");
             this.count--;
             orders.push(BUYLIMIT.shift() as TPostReq);
         }
         while (SELLLIMIT.length && SELLLIMIT[0].price <= Number(data.p)) {
-            console.log("order matched sellLimit");
+            // console.log("order matched sellLimit");
             this.count--;
             orders.push(SELLLIMIT.shift() as TPostReq);
         }
         while (SELLSTOP.length && SELLSTOP[0].price >= Number(data.p)) {
-            console.log("order matched sellStop");
+            // console.log("order matched sellStop");
             this.count--;
             orders.push(SELLSTOP.shift() as TPostReq);
         }
         while (BUYSTOP.length && BUYSTOP[0].price <= Number(data.p)) {
-            console.log("order matched buyStop");
+            // console.log("order matched buyStop");
             this.count--;
-            orders.push(BUYLIMIT.shift() as TPostReq);
+            orders.push(BUYSTOP.shift() as TPostReq);
         }
-        if (orders) updateOrders(orders);
+        if (orders.length) {
+            console.log("order matched", orders);
+            updateOrders(orders);
+        }
         if (!BUYLIMIT.length && !BUYSTOP.length && !SELLLIMIT.length && !SELLSTOP.length) return true;
     }
     async addOrders(data: TPostReq) {
