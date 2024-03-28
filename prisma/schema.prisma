@@ -126,12 +126,7 @@ model Orders {
     TradingAccountId String
 }
 
-model OrderMessageQ {
-    createdAt DateTime    @default(now())
-    id        String      @id @default(cuid())
-    Orders    String
-    type      OrderStatus
-}
+
 
 enum EtriggerType {
     LIMIT

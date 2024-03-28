@@ -6,6 +6,8 @@ import { Server } from "socket.io";
 import env from "./env";
 import router from "./router";
 import { ServerSocket } from "./socket";
+import WSbinance from "./backend/Binance";
+import { WebSocket } from "ws";
 const prisma = new PrismaClient();
 // Create a Socket.IO server instance
 const port = env.PORT;
@@ -45,35 +47,37 @@ application.use((req, res, next) => {
 // });
 
 /** Start Socket */
+// const Binance = new WSbinance();
+// const Binance = new WebSocket("localhost:3002");
 const io = new ServerSocket(httpServer);
 
-setInterval(async () => {
-    const res = await prisma.orderMessageQ.count();
-    if (res) {
-        const messages = await prisma.orderMessageQ.findMany({});
-        const orders = await prisma.orders.findMany({
-            where: {
-                id: {
-                    in: messages.map((item) => item.Orders),
-                },
-            },
-        });
-        console.log("new messageQ found ->", messages);
-        orders.map((item) => {
-            const message = messages.filter((i) => i.Orders === item.id)[0];
-            const payload = { ...message, item };
-            io.SendMessage("notification", item.TradingAccountId, payload);
-        });
-        const res = await prisma.orderMessageQ.deleteMany({
-            where: {
-                id: {
-                    in: messages.map((i) => i.id),
-                },
-            },
-        });
-        console.log("messagedeleted->", res);
-    }
-}, env.DB_TIME_INTERVAL);
+// setInterval(async () => {
+//     const res = await prisma.orderMessageQ.count();
+//     if (res) {
+//         const messages = await prisma.orderMessageQ.findMany({});
+//         const orders = await prisma.orders.findMany({
+//             where: {
+//                 id: {
+//                     in: messages.map((item) => item.Orders),
+//                 },
+//             },
+//         });
+//         console.log("new messageQ found ->", messages);
+//         orders.map((item) => {
+//             const message = messages.filter((i) => i.Orders === item.id)[0];
+//             const payload = { ...message, item };
+//             io.SendMessage("notification", item.TradingAccountId, payload);
+//         });
+//         const res = await prisma.orderMessageQ.deleteMany({
+//             where: {
+//                 id: {
+//                     in: messages.map((i) => i.id),
+//                 },
+//             },
+//         });
+//         console.log("messagedeleted->", res);
+//     }
+// }, env.DB_TIME_INTERVAL);
 
 application.use(router);
 

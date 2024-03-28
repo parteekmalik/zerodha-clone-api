@@ -5,6 +5,7 @@
     "main": "src/index.ts",
     "scripts": {
         "dev": "nodemon --exec ts-node src/server.ts",
+        "tunnel": "lt --port 3001 --subdomain zerodhacloneapi",
         "dev1": "nodemon --exec ts-node src/backend/server.ts",
         "start:server": "ts-node src/server.ts",
         "start:server1": "ts-node src/backend/server.ts",
@@ -36,6 +37,7 @@
         "moment": "^2.29.4",
         "next-auth": "^4.24.7",
         "socket.io": "^4.7.5",
+        "socket.io-client": "^4.7.5",
         "ws": "^8.16.0",
         "zlibjs": "^0.3.1",
         "zod": "^3.22.4"
