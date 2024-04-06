@@ -25,11 +25,9 @@ export type TPostReq = {
     sl: number;
     tp: number;
     TradingAccountId: string;
-}
+};
 
 export type orderType = {
-    BUYLIMIT: TPostReq[];
-    SELLLIMIT: TPostReq[];
-    BUYSTOP: TPostReq[];
-    SELLSTOP: TPostReq[];
+    UPPER: TPostReq[];
+    LOWER: TPostReq[];
 };

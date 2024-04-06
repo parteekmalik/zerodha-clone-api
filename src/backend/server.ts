@@ -1,3 +1,3 @@
-import Orders from "./orders";
+import OrdersManage from "./orders";
 
-const Binance = new Orders();
+const Binance = new OrdersManage();

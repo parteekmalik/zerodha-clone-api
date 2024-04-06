@@ -2,7 +2,6 @@ import { PrismaClient } from "@prisma/client";
 import WebSocket from "ws";
 import { TPostReq, Twsbinance, WS_response } from "../utils/types";
 import updateSubsctription from "./utils/list_sub";
-import completeOrders from "./utils/matching_orders";
 import removeParams from "./utils/test";
 
 const prisma = new PrismaClient();
@@ -65,7 +64,7 @@ export default class WSbinance {
         console.log("wsbinance send -> ", payload);
         this.ws.send(payload);
     }
-     unSubscribe(params: string | string[]) {
+    unSubscribe(params: string | string[]) {
         if (!Array.isArray(params)) params = [params];
         params = removeParams("UNSUBSCRIBE", params, { subscriptions: this._subscriptions, pendingSub: this._pendingSub });
         if (params.length === 0) return;
@@ -77,13 +76,14 @@ export default class WSbinance {
         };
         this.ws.send(JSON.stringify(msg));
     }
-    addOrder(data: TPostReq | TPostReq[]) {
+    addSubsciption(data: TPostReq | TPostReq[]) {
         if (!Array.isArray(data)) data = [data];
+        const list: string[] = [];
         data.map(async (data) => {
             const { name } = data;
 
-            if (!this._subscriptions.includes(name + "@trade")) this.subscribe(name + "@trade");
-
+            if (![...this._subscriptions, ...list].includes(name + "@trade")) list.push(name + "@trade");
         });
+        this.subscribe(list);
     }
 }

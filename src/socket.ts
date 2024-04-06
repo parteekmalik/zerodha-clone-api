@@ -1,16 +1,13 @@
-import { PrismaClient } from "@prisma/client";
 import { Server as HttpServer } from "http";
 import { Server, Socket } from "socket.io";
 import env from "./env";
 import { TPostReq } from "./utils/types";
-import { timeStamp } from "console";
 
 export class ServerSocket {
     public static instance: ServerSocket;
     public io: Server;
 
     public socketidtouserandmatchid: { [socketid: string]: { uid: string; matchid: string } } = {};
-    private prisma = new PrismaClient();
 
     constructor(server: HttpServer) {
         ServerSocket.instance = this;
@@ -31,7 +28,16 @@ export class ServerSocket {
     private superUserID: null | string = null;
 
     private StartListeners = (socket: Socket) => {
-        console.info("Message received from " + socket.id, socket.data);
+        console.info("connected to -> " + socket.id, socket.data);
+        // Logging function to log all messages received
+        const logMessage = (eventName: string, payload: any) => {
+            console.log(`Received "${eventName}" message:`,typeof payload, payload);
+        };
+
+        // Generic event handler to catch all incoming messages
+        socket.onAny((eventName, payload) => {
+            logMessage(eventName, payload);
+        });
 
         socket.on("order", async (payload: TPostReq) => {
             console.log("order recved ->", payload);
@@ -40,6 +46,19 @@ export class ServerSocket {
             if (TradingAccountId) {
                 console.log("sending order to superuser ->", order);
                 if (this.superUserID) this.io.to(this.superUserID).emit("addOrder", order);
+                else console.log("superuser not connected");
+            } else {
+                this.io.to(socket.id).emit("unauthorised");
+                socket.disconnect(true);
+            }
+        });
+        socket.on("deleteOrder", async (payload: TPostReq) => {
+            console.log("deleteOrder recved ->", payload);
+            const deleteOrder: TPostReq = typeof payload === "string" ? JSON.parse(payload) : payload;
+            const TradingAccountId = this.IdToUser[socket.id];
+            if (TradingAccountId) {
+                console.log("sending deleteOrder to superuser ->", deleteOrder);
+                if (this.superUserID) this.io.to(this.superUserID).emit("deleteOrder", deleteOrder);
                 else console.log("superuser not connected");
             } else {
                 this.io.to(socket.id).emit("unauthorised");
@@ -89,8 +108,6 @@ export class ServerSocket {
         });
     };
 
-    private OnHandshake = (payload: { TradingAccountId: string }, socket: Socket) => {};
-
     GetUidFromSocketID = (id: string) => {
         return Object.keys(this.usersToID).find((uid) => this.usersToID[uid] === id);
     };
@@ -102,7 +119,4 @@ export class ServerSocket {
 
         this.io.to(id).emit(name, payload);
     };
-
-    private orderSubmitComform() {}
-    private addOrder(data: TPostReq) {}
 }

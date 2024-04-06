@@ -2,29 +2,21 @@ import { TPostReq, orderType } from "../../utils/types";
 
 export default function completeOrders(data: { s: string; p: string }, Orders: orderType) {
     if (!Orders) return { isleft: false, machedOrders: [] };
-    const { BUYLIMIT, SELLLIMIT, BUYSTOP, SELLSTOP } = Orders;
+    const { UPPER, LOWER } = Orders;
     // console.log(data);
     // TODO: move code to orders class
     const machedOrders = [] as TPostReq[];
-    while (BUYLIMIT.length && BUYLIMIT[0].price >= Number(data.p)) {
-        // console.log("order matched buyLimit");
-        machedOrders.push(BUYLIMIT.shift() as TPostReq);
+    while (LOWER.length && LOWER[0].price >= Number(data.p)) {
+        // console.log("order matched LOWER");
+        machedOrders.push(LOWER.shift() as TPostReq);
     }
-    while (SELLLIMIT.length && SELLLIMIT[0].price <= Number(data.p)) {
-        // console.log("order matched sellLimit");
-        machedOrders.push(SELLLIMIT.shift() as TPostReq);
-    }
-    while (SELLSTOP.length && SELLSTOP[0].price >= Number(data.p)) {
-        // console.log("order matched sellStop");
-        machedOrders.push(SELLSTOP.shift() as TPostReq);
-    }
-    while (BUYSTOP.length && BUYSTOP[0].price <= Number(data.p)) {
-        // console.log("order matched buyStop");
-        machedOrders.push(BUYSTOP.shift() as TPostReq);
+    while (UPPER.length && UPPER[0].price <= Number(data.p)) {
+        // console.log("order matched UPPER");
+        machedOrders.push(UPPER.shift() as TPostReq);
     }
     if (machedOrders.length) {
-        console.log("order matched", machedOrders);
+        console.log("order matched", machedOrders.length);
     }
-    if (!BUYLIMIT.length && !BUYSTOP.length && !SELLLIMIT.length && !SELLSTOP.length) return { isleft: true, machedOrders };
+    if (!UPPER.length && !LOWER.length) return { isleft: true, machedOrders };
     else return { isleft: false, machedOrders };
 }

@@ -82,5 +82,4 @@ const io = new ServerSocket(httpServer);
 application.use(router);
 
 /** Listen */
-httpServer.listen(port, () => console.info(`Server is running`));
-console.log(`Socket.IO server running on port ${port}.`);
+httpServer.listen(port, () => console.info(`Server is running on port ${port}.`));
