@@ -48,7 +48,7 @@ export class ServerSocket {
                 if (this.superUserID) this.io.to(this.superUserID).emit("addOrder", order);
                 else console.log("superuser not connected");
             } else {
-                this.io.to(socket.id).emit("unauthorised");
+                this.SendMessage1("unauthorised", "", socket.id);
                 socket.disconnect(true);
             }
         });
@@ -61,7 +61,7 @@ export class ServerSocket {
                 if (this.superUserID) this.io.to(this.superUserID).emit("deleteOrder", deleteOrder);
                 else console.log("superuser not connected");
             } else {
-                this.io.to(socket.id).emit("unauthorised");
+                this.SendMessage1("unauthorised", "", socket.id);
                 socket.disconnect(true);
             }
         });
@@ -71,31 +71,35 @@ export class ServerSocket {
                     this.SendMessage("notification", item.TradingAccountId, item);
                 });
             else {
-                this.io.to(socket.id).emit("unauthorised");
+                this.SendMessage1("unauthorised", "", socket.id);
                 socket.disconnect(true);
             }
         });
         socket.on("authenticate", (payload: string) => {
-            console.log(payload);
             const data = typeof payload === "string" ? JSON.parse(payload) : payload;
             // console.log(typeof data,data.TradingAccountId,!data, typeof data !== "object", !("TradingAccountId" in data), !data.TradingAccountId, data.TradingAccountId !== "");
             if (!data || typeof data !== "object" || !("TradingAccountId" in data) || !data.TradingAccountId || data.TradingAccountId === "") {
                 console.log("Authentication failed");
-                this.io.to(socket.id).emit("unauthorised");
+                this.SendMessage1("unauthorised", "", socket.id);
                 socket.disconnect(true);
             } else {
                 const { TradingAccountId } = data as { TradingAccountId: string };
                 // Check if the token is valid (e.g., verify the token with your authentication service)
+                setTimeout(() => {
+                    this.SendMessage1("Authentication", "sucessful", socket.id);
+                }, 1000);
                 console.log("Authentication sucessful");
                 if (TradingAccountId === env.BACKEND_SECRET_CODE) {
                     console.log("superuser conected");
                     this.superUserID = socket.id;
-                    socket.broadcast.emit("backendServerUpdate", "connected");
+                    this.SendMessage1("backendServerUpdate", "connected", "all");
                 } else {
                     this.usersToID[TradingAccountId] = socket.id;
                     this.IdToUser[socket.id] = TradingAccountId;
-                    if (this.superUserID) this.io.to(socket.id).emit("backendServerUpdate", "connected");
-                    else this.io.to(socket.id).emit("backendServerUpdate", "disconneted");
+                    setTimeout(() => {
+                        if (this.superUserID) this.SendMessage1("backendServerUpdate", "connected", socket.id);
+                        else this.SendMessage1("backendServerUpdate", "disconneted", socket.id);
+                    }, 1000);
                 }
                 console.log(this.usersToID);
                 console.log(this.IdToUser);
@@ -106,7 +110,7 @@ export class ServerSocket {
             console.info("payload 'Disconnect' : ", payload);
             if (socket.id === this.superUserID) {
                 this.superUserID = null;
-                socket.broadcast.emit("backendServerUpdate", "disconneted");
+                this.SendMessage1("backendServerUpdate", "disconneted", "all");
             } else {
                 const user = this.IdToUser[socket.id];
                 const id = this.usersToID[user];
@@ -115,7 +119,11 @@ export class ServerSocket {
             }
         });
     };
-
+    SendMessage1(type: string, payload: unknown, to: string) {
+        console.log("sending message ->", type, to, payload);
+        if (to === "all") this.io.send(type, payload);
+        else this.io.to(to).emit(type, payload);
+    }
     GetUidFromSocketID = (id: string) => {
         return Object.keys(this.usersToID).find((uid) => this.usersToID[uid] === id);
     };
