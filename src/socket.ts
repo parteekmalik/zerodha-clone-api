@@ -121,7 +121,7 @@ export class ServerSocket {
     };
     SendMessage1(type: string, payload: unknown, to: string) {
         console.log("sending message ->", type, to, payload);
-        if (to === "all") this.io.send(type, payload);
+        if (to === "all") this.io.emit(type, payload);
         else this.io.to(to).emit(type, payload);
     }
     GetUidFromSocketID = (id: string) => {
