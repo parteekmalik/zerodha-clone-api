@@ -31,7 +31,7 @@ export class ServerSocket {
         console.info("connected to -> " + socket.id, socket.data);
         // Logging function to log all messages received
         const logMessage = (eventName: string, payload: any) => {
-            console.log(`Received "${eventName}" message:`,typeof payload, payload);
+            console.log(`Received "${eventName}" message:`, typeof payload, payload);
         };
 
         // Generic event handler to catch all incoming messages
@@ -90,9 +90,12 @@ export class ServerSocket {
                 if (TradingAccountId === env.BACKEND_SECRET_CODE) {
                     console.log("superuser conected");
                     this.superUserID = socket.id;
+                    socket.broadcast.emit("backendServerUpdate", "connected");
                 } else {
                     this.usersToID[TradingAccountId] = socket.id;
                     this.IdToUser[socket.id] = TradingAccountId;
+                    if (this.superUserID) this.io.to(socket.id).emit("backendServerUpdate", "connected");
+                    else this.io.to(socket.id).emit("backendServerUpdate", "disconneted");
                 }
                 console.log(this.usersToID);
                 console.log(this.IdToUser);
@@ -101,10 +104,15 @@ export class ServerSocket {
 
         socket.on("disconnect", (payload) => {
             console.info("payload 'Disconnect' : ", payload);
-            const user = this.IdToUser[socket.id];
-            const id = this.usersToID[user];
-            delete this.usersToID[user];
-            delete this.IdToUser[id];
+            if (socket.id === this.superUserID) {
+                this.superUserID = null;
+                socket.broadcast.emit("backendServerUpdate", "disconneted");
+            } else {
+                const user = this.IdToUser[socket.id];
+                const id = this.usersToID[user];
+                delete this.usersToID[user];
+                delete this.IdToUser[id];
+            }
         });
     };
 
