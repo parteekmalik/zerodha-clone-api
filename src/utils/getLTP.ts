@@ -15,7 +15,7 @@ async function getLTP(symbol: string): Promise<LTPResponse>;
 // Implementation
 async function getLTP(symbol: string | string[]): Promise<LTPResponse | LTPResponse[]> {
     if (Array.isArray(symbol)) {
-        const url = env.BINANCE_LTP_URL + "s=" + symbol.join(",");
+        const url = env.BINANCE_LTP_URL + "s=" + symbol;
         const res = (await axios.get(url)).data as LTPResponse[];
         console.log("getLTP " + symbol.join(",") + " -> ", res);
         return res;
