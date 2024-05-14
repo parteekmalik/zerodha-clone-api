@@ -1,7 +1,6 @@
 import axios from "axios";
 import express from "express";
 import env from "./env";
-import getLTP from "./utils/getLTP";
 
 const router = express.Router();
 

@@ -3,6 +3,8 @@ import { TPostReq } from "../utils/types";
 import WSbinance from "./Binance";
 import superUserSocket from "./superUserSocket";
 import OrdersRecord from "./Trades/OrderRecord";
+import closeOrderTranection from "./Prisma Transection/closeTrade";
+import fillOrderTranection from "./Prisma Transection/FillTrade";
 const prisma = new PrismaClient();
 
 export default class OrdersManage {
@@ -11,17 +13,9 @@ export default class OrdersManage {
     public count = 0;
     private SuperWS = new superUserSocket(process.env.BACKEND_URL as string, {
         setAddOrderFunction: (order: TPostReq) => {
-            console.log("recived order from server ->")
+            console.log("recived order from server ->", order);
             this.orders.addOrder(order);
-            this.ws.updateSubscription(this.orders.subscriptions);
-        },
-        setDeleteOrderFunction: async (ordersid: number | number[]) => {
-            if (!Array.isArray(ordersid)) ordersid = [ordersid];
-            const orders = await prisma.trades.findMany({
-                where: { id: { in: ordersid } },
-            });
-            console.log("order recieved ->", orders);
-            this.orders.deleteOrders(orders);
+            console.log(this.orders.orders);
             this.ws.updateSubscription(this.orders.subscriptions);
         },
     });
@@ -50,54 +44,25 @@ export default class OrdersManage {
         this.ws.setonmessage((msg) => {
             // console.log(msg);
             const matchedOrder = this.orders.matchOrders(msg);
-            this.FillTrades(matchedOrder.MatchedOrders.matchedOrders);
-            this.closeTrades(matchedOrder.TP_SL_MatchedOrders.sl, "sl");
-            this.closeTrades(matchedOrder.TP_SL_MatchedOrders.tp, "tp");
+            matchedOrder.MatchedOrders.matchedOrders.forEach((trade) => this.FillTrades(trade));
+            matchedOrder.TP_SL_MatchedOrders.sl.forEach((trade) => this.closeTrades(trade, "sl"));
+            matchedOrder.TP_SL_MatchedOrders.tp.forEach((trade) => this.closeTrades(trade, "tp"));
             if (matchedOrder.MatchedOrders.left + matchedOrder.TP_SL_MatchedOrders.left === 0) this.ws.updateSubscription(this.orders.subscriptions);
         });
     }
-    async FillTrades(order: TPostReq[]) {
-        if (!order.length) return "no orders sent";
+    async FillTrades(order: TPostReq) {
         console.log("orders sent to db ->", order);
-        try {
-            const res = await prisma.trades.updateMany({
-                where: {
-                    id: { in: order.map((i) => i.id) },
-                },
-                data: { status: "FILLED" },
-            });
-            this.SuperWS.sendNotification(
-                order.map((item) => {
-                    return { ...item, status: "FILLED" as $Enums.TradeStatus };
-                })
-            );
-            this.count -= order.length;
-            console.log(res);
-            return res;
-        } catch {
-            console.log("error in updating orders");
-        }
+        const res = await fillOrderTranection(prisma, order);
+        this.SuperWS.sendNotification(res);
+        this.count--;
+        console.log(res);
     }
-    async closeTrades(order: TPostReq[], type: "sl" | "tp") {
-        if (!order.length) return "no orders sent";
+    async closeTrades(order: TPostReq, type: "sl" | "tp") {
         console.log("orders sent to db ->", order);
-        try {
-            let res = order.map(async (trade) => {
-                return await prisma.trades.update({
-                    where: {
-                        id: trade.id,
-                    },
-                    data: { status: "CLOSED", closePrice: trade[type] },
-                });
-            });
-            const ClosedTrades = await Promise.all(res);
+        const res = await closeOrderTranection(prisma, order, order[type]);
 
-            this.SuperWS.sendNotification(ClosedTrades);
-            this.count -= order.length;
-            console.log(ClosedTrades);
-            return ClosedTrades;
-        } catch {
-            console.log("error in updating orders");
-        }
+        this.SuperWS.sendNotification(res);
+        this.count--;
+        console.log(res);
     }
 }

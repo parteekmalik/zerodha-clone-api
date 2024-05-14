@@ -52,24 +52,9 @@ export class ServerSocket {
                 socket.disconnect(true);
             }
         });
-        socket.on("deleteOrder", async (payload: TPostReq) => {
-            console.log("deleteOrder recved ->", payload);
-            const deleteOrder: TPostReq = typeof payload === "string" ? JSON.parse(payload) : payload;
-            const TradingAccountId = this.IdToUser[socket.id];
-            if (TradingAccountId) {
-                console.log("sending deleteOrder to superuser ->", deleteOrder);
-                if (this.superUserID) this.io.to(this.superUserID).emit("deleteOrder", deleteOrder);
-                else console.log("superuser not connected");
-            } else {
-                this.SendMessage1("unauthorised", "", socket.id);
-                socket.disconnect(true);
-            }
-        });
-        socket.on("sendNotification", async (payload: TPostReq[]) => {
-            if (this.superUserID === socket.id)
-                payload.map((item) => {
-                    this.SendMessage("notification", item.TradingAccountId, item);
-                });
+
+        socket.on("sendNotification", async (payload: TPostReq) => {
+            if (this.superUserID === socket.id) this.SendMessage("notification", payload.TradingAccountId, payload);
             else {
                 this.SendMessage1("unauthorised", "", socket.id);
                 socket.disconnect(true);

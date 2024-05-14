@@ -57,7 +57,7 @@ export default class WSbinance {
         const commonList = this._subscriptions.filter((i) => SubList.includes(i));
         const unSubList = this._subscriptions.filter((i) => !commonList.includes(i));
         const newSubList = SubList.filter((i) => !commonList.includes(i));
-        console.log(this._subscriptions, SubList, unSubList, newSubList);
+        // console.log(this._subscriptions, SubList, unSubList, newSubList);
         if (this.ws.OPEN !== this.ws.readyState) {
             this._pendingSub = this._pendingSub.concat(newSubList);
             this._pendingSub = this._pendingSub.filter((i) => !unSubList.includes(i));

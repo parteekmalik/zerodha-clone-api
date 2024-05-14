@@ -2,12 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import cors from "cors";
 import express from "express";
 import http from "http";
-import { Server } from "socket.io";
 import env from "./env";
 import router from "./router";
 import { ServerSocket } from "./socket";
-import WSbinance from "./backend/Binance";
-import { WebSocket } from "ws";
 const prisma = new PrismaClient();
 // Create a Socket.IO server instance
 const port = env.PORT;
