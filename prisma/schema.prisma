@@ -77,56 +77,58 @@ model VerificationToken {
 // app schema
 
 model TradingAccount {
-    id        String   @id @default(cuid())
-    balance   Float    @default(1000)
-    margin    Int      @default(100)
-    assets    Assets[]
-    statemnet Orders[]
-    User      User?    @relation(fields: [userId], references: [id])
-    userId    String?
-    watchList String[] @default(["", "", "", "", "", "", ""])
-    Pin0      String   @default("ETHUSDT")
-    Pin1      String   @default("BTCUSDT")
+    id                  String        @id @default(cuid())
+    margin              Int           @default(100)
+    User                User          @relation(fields: [userId], references: [id])
+    userId              String
+    watchList           String[]      @default(["", "", "", "", "", "", ""])
+    Pin0                String        @default("ETHUSDT")
+    Pin1                String        @default("BTCUSDT")
+    Trades              Trades[]
+    USDT_Free_balance   Float         @default(100000)
+    USDT_Locked_balance Float         @default(0)
+    TradeAssets         TradeAssets[]
 }
 
-// model Transection {
-//     id               String          @id @default(cuid())
-//     type             String
-//     asset            String
-//     amount           Float
-//     order            FullOrder?
-//     TradingAccount   TradingAccount? @relation(fields: [tradingAccountId], references: [id])
-//     tradingAccountId String?
-//     fullOrderId      String?
-// }
-
-model Assets {
+model TradeAssets {
     id           String @id @default(cuid())
     name         String
-    totalAmount  Float
-    lockedAmount Float
+    lockedAmount Float  @default(0)
     freeAmount   Float
 
-    TradingAccount   TradingAccount? @relation(fields: [tradingAccountId], references: [id])
-    tradingAccountId String?
-}
+    Trades Trades[]
 
-model Orders {
-    id               String         @id @default(cuid())
-    createdAt        DateTime       @default(now())
-    name             String
-    type             OrderType
-    price            Float
-    quantity         Float
-    status           OrderStatus    @default(open)
-    triggerType      EtriggerType // Corrected typo from "trigerType" to "triggerType"
-    sl               Int            @default(0)
-    tp               Int            @default(0)
     TradingAccount   TradingAccount @relation(fields: [TradingAccountId], references: [id])
     TradingAccountId String
+
+    @@unique([TradingAccountId, name], name: "unique_TradingAccountId_name")
 }
 
+model Trades {
+    id               Int            @id @default(autoincrement())
+    openedAt         DateTime       @default(now())
+    closedAt         DateTime       @updatedAt
+    name             String
+    quantity         Float
+    openPrice        Float
+    closePrice       Float          @default(0)
+    type             OrderType
+    status           TradeStatus    @default(PENDING)
+    triggerType      EtriggerType
+    sl               Float          @default(0)
+    tp               Float          @default(0)
+    TradingAccount   TradingAccount @relation(fields: [TradingAccountId], references: [id])
+    TradingAccountId String
+    TradeAssets      TradeAssets    @relation(fields: [tradeAssetsId], references: [id])
+    tradeAssetsId    String
+}
 
+enum TradeStatus {
+    FILLED
+    PENDING
+    CLOSED
+    CANCELLED
+}
 
 enum EtriggerType {
     LIMIT

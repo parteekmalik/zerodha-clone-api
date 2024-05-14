@@ -1,8 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import WebSocket from "ws";
-import { TPostReq, Twsbinance, WS_response } from "../utils/types";
-import updateSubsctription from "./utils/list_sub";
-import removeParams from "./utils/test";
+import { Twsbinance, WS_response } from "../utils/types";
+import FormatSubsctriptionParams from "./utils/list_sub";
 
 const prisma = new PrismaClient();
 
@@ -22,8 +21,7 @@ export default class WSbinance {
         this.ws.onopen = () => {
             console.log("WSbinance opened");
             if (this._pendingSub.length) {
-                this.ws.send(JSON.stringify({ method: "SUBSCRIBE", params: [...this._pendingSub], id: 1 }));
-
+                this.send({ method: "SUBSCRIBE", params: this._pendingSub, id: 1 });
                 this._pendingSub = [];
             }
         };
@@ -33,10 +31,10 @@ export default class WSbinance {
     public setonmessage(fn: (msg: { s: string; p: string }) => void) {
         this.ws.onmessage = (msg) => {
             const data = JSON.parse(msg.data.toString()) as WS_response;
+            // console.log(data);
             if ("id" in data) {
-                if (data.id !== 3) this.ws.send(JSON.stringify({ method: "LIST_SUBSCRIPTIONS", id: 3 }));
-                else if (data.result) {
-                    this._subscriptions = updateSubsctription(data.result);
+                if (data.result && data.id === 3) {
+                    this._subscriptions = FormatSubsctriptionParams(data.result);
                 }
                 console.log(msg.data);
             } else {
@@ -44,46 +42,42 @@ export default class WSbinance {
             }
         };
     }
-    private subscribe(params: string | string[]) {
-        if (!Array.isArray(params)) params = [params];
-        params = removeParams("SUBSCRIBE", params, { subscriptions: this._subscriptions, pendingSub: this._pendingSub });
-        if (params.length === 0) return;
-        const msg: Twsbinance = {
-            method: "SUBSCRIBE",
-            params,
-            id: 1,
-        };
-        if (this.ws.OPEN === this.ws.readyState) {
-            this._subscriptions = updateSubsctription([...this._subscriptions, ...params]);
-            this.ws.send(JSON.stringify(msg));
-        } else {
-            this._pendingSub = [...this._pendingSub, ...params];
+
+    send(payload: Twsbinance) {
+        if ("params" in payload) {
+            payload.params = payload.params.map((i) => i.toLowerCase() + "@trade");
+            if (payload.params.length === 0) return;
         }
-    }
-    send(payload: string) {
         console.log("wsbinance send -> ", payload);
-        this.ws.send(payload);
+        this.ws.send(JSON.stringify(payload));
     }
-    unSubscribe(params: string | string[]) {
-        if (!Array.isArray(params)) params = [params];
-        params = removeParams("UNSUBSCRIBE", params, { subscriptions: this._subscriptions, pendingSub: this._pendingSub });
-        if (params.length === 0) return;
 
-        const msg: Twsbinance = {
-            method: "UNSUBSCRIBE",
-            params,
-            id: 2,
-        };
-        this.ws.send(JSON.stringify(msg));
-    }
-    addSubsciption(data: TPostReq | TPostReq[]) {
-        if (!Array.isArray(data)) data = [data];
-        const list: string[] = [];
-        data.map(async (data) => {
-            const { name } = data;
-
-            if (![...this._subscriptions, ...list].includes(name + "@trade")) list.push(name + "@trade");
-        });
-        this.subscribe(list);
+    updateSubscription(SubList: string[]) {
+        // TODO sort new item and removed item
+        const commonList = this._subscriptions.filter((i) => SubList.includes(i));
+        const unSubList = this._subscriptions.filter((i) => !commonList.includes(i));
+        const newSubList = SubList.filter((i) => !commonList.includes(i));
+        console.log(this._subscriptions, SubList, unSubList, newSubList);
+        if (this.ws.OPEN !== this.ws.readyState) {
+            this._pendingSub = this._pendingSub.concat(newSubList);
+            this._pendingSub = this._pendingSub.filter((i) => !unSubList.includes(i));
+        } else {
+            if (unSubList.length > 0)
+                this.send({
+                    method: "UNSUBSCRIBE",
+                    params: unSubList,
+                    id: 2,
+                });
+            if (SubList.length > 0)
+                this.send({
+                    method: "SUBSCRIBE",
+                    params: newSubList,
+                    id: 1,
+                });
+            if (unSubList.length + SubList.length > 0) {
+                this._subscriptions = SubList;
+                this.ws.send(JSON.stringify({ method: "LIST_SUBSCRIPTIONS", id: 3 }));
+            }
+        }
     }
 }

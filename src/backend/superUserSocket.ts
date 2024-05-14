@@ -3,7 +3,7 @@ import { TPostReq } from "../utils/types";
 
 export default class superUserSocket {
     private ws;
-    constructor(url: string, { setAddOrderFunction, setDeleteOrderFunction }: { setAddOrderFunction: (data: TPostReq) => void; setDeleteOrderFunction: (data: string | string[]) => void }) {
+    constructor(url: string, { setAddOrderFunction, setDeleteOrderFunction }: { setAddOrderFunction: (data: TPostReq) => void; setDeleteOrderFunction: (data: number | number[]) => void }) {
         this.ws = io(url);
         this.ws.on("connect", () => {
             console.log("Connected to WebSocket server");
