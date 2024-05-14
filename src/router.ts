@@ -14,8 +14,10 @@ router.get("/ping", (req, res, next) => {
 });
 router.get("/curPrice", async (req, res, next) => {
     console.log(req.query);
-    if (req.query.symbols) return res.json((await axios.get(env.BINANCE_LTP_URL + "s=" + req.query.symbols)).data);
-    if (req.query.symbol) return res.json((await axios.get(env.BINANCE_LTP_URL + "=" + req.query.symbol)).data);
+    let result;
+    if (req.query.symbols) result = res.json((await axios.get(env.BINANCE_LTP_URL + "s=" + req.query.symbols)).data);
+    if (req.query.symbol) result = res.json((await axios.get(env.BINANCE_LTP_URL + "=" + req.query.symbol)).data);
+    return result?.status(200);
 });
 
 /** Error handling */
