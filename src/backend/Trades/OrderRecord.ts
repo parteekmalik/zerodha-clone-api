@@ -24,6 +24,7 @@ export default class OrdersRecord {
         const res1 = tp_sl.deleteItem(order);
         if (order.status === "PENDING") pending.addItem(order);
         else if (order.status === "FILLED") tp_sl.addItem(order);
+        else return;
         if (!this.subscriptions.includes(order.name)) this.subscriptions.push(order.name);
         // console.log("orders =>", this.orders);
     }
