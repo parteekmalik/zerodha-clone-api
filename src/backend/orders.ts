@@ -52,17 +52,25 @@ export default class OrdersManage {
     }
     async FillTrades(order: TPostReq) {
         console.log("orders sent to db ->", order);
-        const res = await fillOrderTranection(prisma, order);
-        this.SuperWS.sendNotification(res);
-        this.count--;
-        console.log(res);
+        try {
+            const res = await fillOrderTranection(prisma, order);
+            this.SuperWS.sendNotification(res);
+            this.count--;
+            console.log(res);
+        } catch {
+            console.log("didnt update trade");
+        }
     }
     async closeTrades(order: TPostReq, type: "sl" | "tp") {
         console.log("orders sent to db ->", order);
-        const res = await closeOrderTranection(prisma, order, order[type]);
+        try {
+            const res = await closeOrderTranection(prisma, order, order[type]);
 
-        this.SuperWS.sendNotification(res);
-        this.count--;
-        console.log(res);
+            this.SuperWS.sendNotification(res);
+            this.count--;
+            console.log(res);
+        } catch {
+            console.log("didnt update trade");
+        }
     }
 }
