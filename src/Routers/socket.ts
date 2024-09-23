@@ -138,7 +138,7 @@ export class ServerSocket {
     };
     SendMessageToClient = ({ TradingAccountId, data }: { data: SendMessageToClientType; TradingAccountId: string }) => {
         const { name, payload } = data;
-        console.info("Emitting event: " + name + " to", TradingAccountId, payload);
+        console.info("Emitting event: " + name + " to", this.usersToID[TradingAccountId], payload);
         if (TradingAccountId === "all") this.io.emit(name, payload);
         else this.io.to(this.usersToID[TradingAccountId]).emit(name, payload);
     };
