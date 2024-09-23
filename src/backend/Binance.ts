@@ -35,8 +35,8 @@ export default class WSbinance {
             if ("id" in data) {
                 if (data.result && data.id === 3) {
                     this._subscriptions = FormatSubsctriptionParams(data.result);
+                    console.log(msg.data);
                 }
-                console.log(msg.data);
             } else {
                 fn(data);
             }

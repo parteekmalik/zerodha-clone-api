@@ -1,9 +1,9 @@
 import { INSPECT_MAX_BYTES } from "buffer";
-import { TPostReq } from "../../utils/types";
+import { TOrder } from "../../utils/types";
 
 export default class Order {
-    UPPER: TPostReq[] = [];
-    LOWER: TPostReq[] = [];
+    UPPER: TOrder[] = [];
+    LOWER: TOrder[] = [];
     constructor() {}
 
     topItems() {
@@ -13,25 +13,26 @@ export default class Order {
     getLists() {
         return { UPPER: this.UPPER, LOWER: this.LOWER };
     }
-    deleteItem(order: TPostReq) {
+    deleteItem(order: TOrder) {
         const to = order.triggerType === "LIMIT" ? "LOWER" : "UPPER";
 
         this[to] = this[to].filter((i) => i.id !== order.id);
         this.sortLists(to);
-        if (this.UPPER.length === 0 && this.LOWER.length === 0) return order.name;
+        return { name: order.name, count: this.LOWER.length + this.UPPER.length };
     }
-    addItem(order: TPostReq) {
+    addItem(order: TOrder) {
         const to = order.triggerType === "LIMIT" ? "LOWER" : "UPPER";
         this[to].push(order);
         this.sortLists(to);
+        return { name: order.name, count: this.LOWER.length + this.UPPER.length };
     }
     private sortLists(name: "LOWER" | "UPPER") {
-        this[name].sort((a, b) => (name === "UPPER" ? a.openPrice - b.openPrice : b.openPrice - a.openPrice));
+        this[name].sort((a, b) => (name === "UPPER" ? a.price - b.price : b.price - a.price));
     }
     getmatchedOrders(price: number) {
         const matchedOrders = [];
-        while (this.UPPER.length && this.UPPER[0].openPrice <= price) matchedOrders.push(this.UPPER.shift() as TPostReq);
-        while (this.LOWER.length && this.LOWER[0].openPrice >= price) matchedOrders.push(this.LOWER.shift() as TPostReq);
+        while (this.UPPER.length && this.UPPER[0].price <= price) matchedOrders.push(this.UPPER.shift() as TOrder);
+        while (this.LOWER.length && this.LOWER[0].price >= price) matchedOrders.push(this.LOWER.shift() as TOrder);
         return { matchedOrders, left: this.UPPER.length + this.LOWER.length };
     }
 }

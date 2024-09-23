@@ -1,3 +1,3 @@
-import OrdersManage from "./orders";
+import OrdersManager from "./ordersManager";
 
-const Binance = new OrdersManage();
+new OrdersManager();

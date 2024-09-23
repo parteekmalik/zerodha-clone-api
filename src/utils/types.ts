@@ -1,4 +1,4 @@
-import { $Enums, Trades } from "@prisma/client";
+import { Order } from "@prisma/client";
 
 export type Twsbinance =
     | {
@@ -13,9 +13,9 @@ export type Twsbinance =
 export type WS_method = "SUBSCRIBE" | "UNSUBSCRIBE";
 export type WS_response = { result: null | string[]; id: number } | { s: string; p: string };
 
-export type TPostReq = Trades
+export type TOrder = Order;
 
 export type orderType = {
-    UPPER: TPostReq[];
-    LOWER: TPostReq[];
+    UPPER: TOrder[];
+    LOWER: TOrder[];
 };

@@ -1,4 +1,7 @@
-const env = {
+import dotenv from "dotenv";
+dotenv.config();
+
+export default {
     DATABASE_URL: process.env.DATABASE_URL as string,
     PORT: Number(process.env.PORT) as number,
     DATABASE_TYPE: process.env.DATABASE_TYPE as string,
@@ -13,5 +16,3 @@ const env = {
     BACKEND_SECRET_CODE: process.env.BACKEND_SECRET_CODE as string,
     DB_TIME_INTERVAL: Number(process.env.DB_TIME_INTERVAL) as number,
 };
-
-export default env;
