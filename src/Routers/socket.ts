@@ -72,6 +72,7 @@ export class ServerSocket {
     private StartListeners = (socket: SocketWithContextType) => {
         console.info("connected to -> " + socket.id, socket.data);
         socketEmitter({ name: AUTHENTICATION, payload: "sucessful" });
+        if (socket.data.tradingAccId) this.usersToID[socket.data.tradingAccId] = socket.id;
         if (this.superUserID) {
             if (socket.data.isSuperUser)
                 this.SendMessageToClient({
