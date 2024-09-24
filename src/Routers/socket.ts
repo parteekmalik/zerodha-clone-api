@@ -1,19 +1,7 @@
 import { Server as HttpServer } from "http";
 import { Socket, Server as SocketServer } from "socket.io";
-import {
-    NOTIFY_USER,
-    NOTIFY_USER_PAYLOAD,
-    SendMessageToSuperUserType,
-    UPDATE_ORDER,
-} from "../../WStypes/typeForBackendAndSocket";
-import {
-    AUTHENTICATION,
-    AUTHENTICATION_PAYLOAD,
-    BACKEND_SERVER_UPDATE,
-    BACKEND_SERVER_UPDATE_PAYLOAD,
-    NOTIFICATION,
-    SendMessageToClientType,
-} from "../../WStypes/typeForFrontendToSocket";
+import { NOTIFY_USER, NOTIFY_USER_PAYLOAD, SendMessageToSuperUserType, UPDATE_ORDER } from "../../WStypes/typeForBackendAndSocket";
+import { AUTHENTICATION, AUTHENTICATION_PAYLOAD, BACKEND_SERVER_UPDATE, BACKEND_SERVER_UPDATE_PAYLOAD, NOTIFICATION, SendMessageToClientType } from "../../WStypes/typeForFrontendToSocket";
 import { UPDATE_OR_ADD_ORDER, UPDATE_OR_ADD_ORDER_PAYLOAD } from "../../WStypes/typeForSocketToFrontend";
 import verifyDiscordAccessToken from "../Auth/auth";
 import env from "../env";
@@ -140,6 +128,7 @@ export class ServerSocket {
     SendMessageToClient = ({ TradingAccountId, data }: { data: SendMessageToClientType; TradingAccountId: string }) => {
         const { name, payload } = data;
         console.info("Emitting event: " + name + " to", this.usersToID[TradingAccountId], payload);
+        if (!this.usersToID[TradingAccountId]) console.log("debug: ", this.usersToID);
         if (TradingAccountId === "all") this.io.emit(name, payload);
         else this.io.to(this.usersToID[TradingAccountId]).emit(name, payload);
     };
