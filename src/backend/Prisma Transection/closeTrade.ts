@@ -2,43 +2,28 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { DefaultArgs } from "@prisma/client/runtime/library";
 import { TOrder } from "../../utils/types";
 
-// TODO: add logic for limit orders (add lockedBalance)
-export default async function closeOrderTranection(
-    db: PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>,
-    trade: TOrder,
-    closePrice: number
-) {
-    const transection = await db.$transaction(async (tx) => {
-        const name = trade.name.slice(0, -4).toUpperCase();
+export default async function closeOrderTransaction(db: PrismaClient<Prisma.PrismaClientOptions, never, DefaultArgs>, trade: TOrder, closePrice: number) {
+    const isBuyOrder = trade.type === "BUY";
+    const baseAssetName = trade.name.slice(0, -4).toUpperCase();
+    const usdtAmount = trade.quantity * closePrice;
 
-        const data = {
-            USDT: trade.quantity * closePrice,
-            asset: trade.quantity,
-        };
+    const baseAssetData = isBuyOrder ? { freeAmount: { increment: trade.quantity } } : { lockedAmount: { decrement: trade.quantity } };
 
-        const res = await tx.order.update({
-            where: {
-                id: trade.id,
-            },
-            data: {
-                status: "COMPLETED",
-                price: closePrice,
-            },
-        });
+    const usdtAssetData = isBuyOrder ? { lockedAmount: { decrement: usdtAmount } } : { freeAmount: { increment: usdtAmount } };
 
+    const transaction = await db.$transaction(async (tx) => {
+        // Update base asset (e.g., BTC/ETH)
         await tx.assets.update({
             where: {
                 unique_TradingAccountId_name: {
                     TradingAccountId: trade.TradingAccountId,
-                    name,
+                    name: baseAssetName,
                 },
             },
-            data: {
-                freeAmount: {
-                    decrement: data.asset,
-                },
-            },
+            data: baseAssetData,
         });
+
+        // Update USDT asset
         await tx.assets.update({
             where: {
                 unique_TradingAccountId_name: {
@@ -46,16 +31,15 @@ export default async function closeOrderTranection(
                     name: "USDT",
                 },
             },
-            data: {
-                freeAmount: {
-                    increment: data.USDT,
-                },
-                lockedAmount: {
-                    decrement: trade.quantity * trade.price,
-                },
-            },
+            data: usdtAssetData,
         });
-        return res;
+
+        // Update order status to COMPLETED
+        return await tx.order.update({
+            where: { id: trade.id },
+            data: { status: "COMPLETED" },
+        });
     });
-    return transection;
+
+    return transaction;
 }
