@@ -22,9 +22,9 @@ export default class OrdersManager {
         this.PopulateOrdersFromDB();
         this.ws = new WSbinance(env.BINANCE_WS_URL);
         this.ws.setonmessage((msg) => {
-            console.log(msg.s,msg.p);
+            // console.log(msg.s,msg.p);
             const matchedOrder = this.OrderRecords.matchOrders(msg);
-            console.log(matchedOrder);
+            // console.log(matchedOrder);
             matchedOrder.matchedOrders.forEach((trade) => this.closeTrades(trade, Number(msg.p)));
             if (matchedOrder.left === 0) this.ws.updateSubscription(this.OrderRecords.getSubsriptions());
         });
