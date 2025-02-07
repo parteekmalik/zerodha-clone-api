@@ -20,6 +20,7 @@ export default class superUserSocket {
             setDeleteOrderFunction?: (data: number | number[]) => void;
         }
     ) {
+        console.log("connectiong to backend server -> ",url);
         this.ws = io(url, { auth: { token: env.BACKEND_SECRET_CODE } });
         this.ws.on("connect", () => {
             console.log("Connected to WebSocket server");

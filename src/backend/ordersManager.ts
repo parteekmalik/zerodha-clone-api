@@ -20,6 +20,7 @@ export default class OrdersManager {
     });
     constructor() {
         this.PopulateOrdersFromDB();
+        console.log("connectiong to binance server -> ",env.BINANCE_WS_URL);
         this.ws = new WSbinance(env.BINANCE_WS_URL);
         this.ws.setonmessage((msg) => {
             // console.log(msg.s,msg.p);
