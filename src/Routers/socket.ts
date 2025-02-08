@@ -3,7 +3,7 @@ import { Socket, Server as SocketServer } from "socket.io";
 import { NOTIFY_USER, NOTIFY_USER_PAYLOAD, SendMessageToSuperUserType, UPDATE_ORDER } from "../../WStypes/typeForBackendAndSocket";
 import { AUTHENTICATION, AUTHENTICATION_PAYLOAD, BACKEND_SERVER_UPDATE, BACKEND_SERVER_UPDATE_PAYLOAD, NOTIFICATION, SendMessageToClientType } from "../../WStypes/typeForFrontendToSocket";
 import { UPDATE_OR_ADD_ORDER, UPDATE_OR_ADD_ORDER_PAYLOAD } from "../../WStypes/typeForSocketToFrontend";
-import verifyDiscordAccessToken from "../Auth/auth";
+import { verifyAuthToken } from "../Auth/verifyAuthToken";
 import env from "../env";
 import { TOrder } from "../utils/types";
 
@@ -34,17 +34,15 @@ export class ServerSocket {
             try {
                 const token = socket.handshake.auth.token;
                 if (token === env.BACKEND_SECRET_CODE) {
-                    this.superUserID = socket.id;
                     socket.data.isSuperUser = true;
                 } else {
-                    const tradingAccId = (await verifyDiscordAccessToken(token))?.id;
+                    const tradingAccId = await verifyAuthToken(token);
                     socket.data.tradingAccId = tradingAccId;
                     socket.data.isSuperUser = false;
                 }
-
-                next(); // Continue to the next middleware or event handler
+                next();
             } catch (error) {
-                console.log("Authentication error: " + error);
+                console.log("Authentication error:", error);
                 socket.disconnect(true);
             }
         });
