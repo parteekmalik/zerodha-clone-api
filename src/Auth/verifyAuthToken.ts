@@ -16,7 +16,7 @@ export async function verifyAuthToken(token: string) {
         const discordResult = await verifyDiscordAccessToken(token);
         return getaccountId(discordResult);
     } catch (discordError) {
-        console.warn('Discord authentication failed:', discordError);
+        console.warn('Discord authentication failed: token:', token, discordError);
     }
 
     // If the Discord check fails, try verifying as a Google token.
@@ -24,7 +24,7 @@ export async function verifyAuthToken(token: string) {
         const googleResult = await verifyGoogleAccessToken(token);
         return getaccountId(googleResult);
     } catch (googleError) {
-        console.warn('Google authentication failed:', googleError);
+        console.warn('Google authentication failed: token:', token, googleError);
     }
 
     // If both authentication methods fail, throw an error.
