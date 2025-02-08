@@ -50,6 +50,7 @@ export class ServerSocket {
                 const token = socket.handshake.auth.token;
                 if (token === env.BACKEND_SECRET_CODE) {
                     socket.data.isSuperUser = true;
+                    this.superUserID = socket.id;
                 } else {
                     const tradingAccId = await verifyAuthToken(token);
                     if (!tradingAccId)
@@ -76,6 +77,7 @@ export class ServerSocket {
         console.info('connected to -> ' + socket.id, socket.data);
         socketEmitter({ name: AUTHENTICATION, payload: 'sucessful' });
         if (socket.data.tradingAccId) this.usersToID[socket.data.tradingAccId] = socket.id;
+        console.log('this.superUserID', this.superUserID);
         if (this.superUserID) {
             if (socket.data.isSuperUser)
                 this.SendMessageToClient({
