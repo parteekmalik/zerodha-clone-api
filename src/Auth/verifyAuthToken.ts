@@ -1,4 +1,6 @@
+import { PrismaClient } from '@prisma/client';
 import { verifyDiscordAccessToken, verifyGoogleAccessToken } from './auth';
+const prisma = new PrismaClient();
 
 /**
  * Attempts to verify the token using Discord authentication first.
@@ -8,16 +10,11 @@ import { verifyDiscordAccessToken, verifyGoogleAccessToken } from './auth';
  * @returns An object with the trading account id and provider if verification is successful.
  * @throws An error if neither method validates the token.
  */
-export async function verifyAuthToken(
-    token: string
-): Promise<{ id: string; provider: 'discord' | 'google' }> {
+export async function verifyAuthToken(token: string) {
     // Try verifying as a Discord token.
     try {
         const discordResult = await verifyDiscordAccessToken(token);
-        if (discordResult && discordResult.id) {
-            console.log('Authenticated using Discord:', discordResult.id);
-            return { id: discordResult.id, provider: 'discord' };
-        }
+        return getaccountId(discordResult);
     } catch (discordError) {
         console.warn('Discord authentication failed:', discordError);
     }
@@ -25,14 +22,35 @@ export async function verifyAuthToken(
     // If the Discord check fails, try verifying as a Google token.
     try {
         const googleResult = await verifyGoogleAccessToken(token);
-        if (googleResult && googleResult.id) {
-            console.log('Authenticated using Google:', googleResult.id);
-            return { id: googleResult.id, provider: 'google' };
-        }
+        return getaccountId(googleResult);
     } catch (googleError) {
         console.warn('Google authentication failed:', googleError);
     }
 
     // If both authentication methods fail, throw an error.
     throw new Error('Invalid access token for both providers');
+}
+
+async function getaccountId(data: { id: string; provider: 'discord' | 'google' }) {
+    const userId = (
+        await prisma.account.findUnique({
+            where: {
+                provider_providerAccountId: {
+                    provider: data.provider,
+                    providerAccountId: data.id,
+                },
+            },
+        })
+    )?.userId;
+    // Return user data if the token is valid
+    return (
+        await prisma.tradingAccount.findUnique({
+            where: {
+                userId,
+            },
+            select: {
+                id: true,
+            },
+        })
+    )?.id;
 }

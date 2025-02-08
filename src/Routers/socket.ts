@@ -1,11 +1,26 @@
-import { Server as HttpServer } from "http";
-import { Socket, Server as SocketServer } from "socket.io";
-import { NOTIFY_USER, NOTIFY_USER_PAYLOAD, SendMessageToSuperUserType, UPDATE_ORDER } from "../../WStypes/typeForBackendAndSocket";
-import { AUTHENTICATION, AUTHENTICATION_PAYLOAD, BACKEND_SERVER_UPDATE, BACKEND_SERVER_UPDATE_PAYLOAD, NOTIFICATION, SendMessageToClientType } from "../../WStypes/typeForFrontendToSocket";
-import { UPDATE_OR_ADD_ORDER, UPDATE_OR_ADD_ORDER_PAYLOAD } from "../../WStypes/typeForSocketToFrontend";
-import { verifyAuthToken } from "../Auth/verifyAuthToken";
-import env from "../env";
-import { TOrder } from "../utils/types";
+import { Server as HttpServer } from 'http';
+import { Socket, Server as SocketServer } from 'socket.io';
+import {
+    NOTIFY_USER,
+    NOTIFY_USER_PAYLOAD,
+    SendMessageToSuperUserType,
+    UPDATE_ORDER,
+} from '../../WStypes/typeForBackendAndSocket';
+import {
+    AUTHENTICATION,
+    AUTHENTICATION_PAYLOAD,
+    BACKEND_SERVER_UPDATE,
+    BACKEND_SERVER_UPDATE_PAYLOAD,
+    NOTIFICATION,
+    SendMessageToClientType,
+} from '../../WStypes/typeForFrontendToSocket';
+import {
+    UPDATE_OR_ADD_ORDER,
+    UPDATE_OR_ADD_ORDER_PAYLOAD,
+} from '../../WStypes/typeForSocketToFrontend';
+import { verifyAuthToken } from '../Auth/verifyAuthToken';
+import env from '../env';
+import { TOrder } from '../utils/types';
 
 interface SocketWithContextType extends Socket {
     data: {
@@ -25,8 +40,8 @@ export class ServerSocket {
         ServerSocket.instance = this;
         this.io = new SocketServer(server, {
             cors: {
-                methods: ["GET", "POST"],
-                origin: ["*", "http://localhost:3000", "https://zerodha-copy-next.vercel.app"],
+                methods: ['GET', 'POST'],
+                origin: ['*', 'http://localhost:3000', 'https://zerodha-copy-next.vercel.app'],
             },
         });
         // Middleware to authenticate the token from the frontend
@@ -37,17 +52,19 @@ export class ServerSocket {
                     socket.data.isSuperUser = true;
                 } else {
                     const tradingAccId = await verifyAuthToken(token);
+                    if (!tradingAccId)
+                        throw new Error('Failed to verify token: trading account ID not found.');
                     socket.data.tradingAccId = tradingAccId;
                     socket.data.isSuperUser = false;
                 }
                 next();
             } catch (error) {
-                console.log("Authentication error:", error);
+                console.log('Authentication error:', error);
                 socket.disconnect(true);
             }
         });
 
-        this.io.on("connect", this.StartListeners);
+        this.io.on('connect', this.StartListeners);
     }
 
     /** Master list of all connected users */
@@ -56,16 +73,16 @@ export class ServerSocket {
     private superUserID: null | string = null;
 
     private StartListeners = (socket: SocketWithContextType) => {
-        console.info("connected to -> " + socket.id, socket.data);
-        socketEmitter({ name: AUTHENTICATION, payload: "sucessful" });
+        console.info('connected to -> ' + socket.id, socket.data);
+        socketEmitter({ name: AUTHENTICATION, payload: 'sucessful' });
         if (socket.data.tradingAccId) this.usersToID[socket.data.tradingAccId] = socket.id;
         if (this.superUserID) {
             if (socket.data.isSuperUser)
                 this.SendMessageToClient({
-                    data: { name: BACKEND_SERVER_UPDATE, payload: "connected" },
-                    TradingAccountId: "all",
+                    data: { name: BACKEND_SERVER_UPDATE, payload: 'connected' },
+                    TradingAccountId: 'all',
                 });
-            else socketEmitter({ name: BACKEND_SERVER_UPDATE, payload: "connected" });
+            else socketEmitter({ name: BACKEND_SERVER_UPDATE, payload: 'connected' });
         }
         // Logging function to log all messages received
         const logMessage = (eventName: string, payload: any) => {
@@ -78,11 +95,13 @@ export class ServerSocket {
         });
 
         socket.on(UPDATE_OR_ADD_ORDER, async (payload: UPDATE_OR_ADD_ORDER_PAYLOAD) => {
-            const order: TOrder = typeof payload === "string" ? JSON.parse(payload) : payload;
-            if (socket.data.tradingAccId !== order.TradingAccountId) disconnectWithUnathorizedMessage();
+            const order: TOrder = typeof payload === 'string' ? JSON.parse(payload) : payload;
+            if (socket.data.tradingAccId !== order.TradingAccountId)
+                disconnectWithUnathorizedMessage();
 
-            if (this.superUserID) this.SendMessageToSuperUser({ name: UPDATE_ORDER, payload: order });
-            else console.log("superuser not connected");
+            if (this.superUserID)
+                this.SendMessageToSuperUser({ name: UPDATE_ORDER, payload: order });
+            else console.log('superuser not connected');
         });
 
         socket.on(NOTIFY_USER, async (payload: NOTIFY_USER_PAYLOAD) => {
@@ -93,19 +112,19 @@ export class ServerSocket {
             });
         });
 
-        socket.on("disconnect", (payload) => {
+        socket.on('disconnect', (payload) => {
             if (socket.id === this.superUserID) {
                 this.superUserID = null;
                 this.SendMessageToClient({
-                    data: { name: BACKEND_SERVER_UPDATE, payload: "disconneted" },
-                    TradingAccountId: "all",
+                    data: { name: BACKEND_SERVER_UPDATE, payload: 'disconneted' },
+                    TradingAccountId: 'all',
                 });
             } else {
                 delete this.usersToID[socket.data.tradingAccId];
             }
         });
         const disconnectWithUnathorizedMessage = () => {
-            socketEmitter({ name: AUTHENTICATION, payload: "unsucessful" });
+            socketEmitter({ name: AUTHENTICATION, payload: 'unsucessful' });
             socket.disconnect(true);
         };
         function socketEmitter({
@@ -123,21 +142,27 @@ export class ServerSocket {
             socket.emit(name, payload);
         }
     };
-    SendMessageToClient = ({ TradingAccountId, data }: { data: SendMessageToClientType; TradingAccountId: string }) => {
+    SendMessageToClient = ({
+        TradingAccountId,
+        data,
+    }: {
+        data: SendMessageToClientType;
+        TradingAccountId: string;
+    }) => {
         const { name, payload } = data;
-        console.info("Emitting event: " + name + " to", this.usersToID[TradingAccountId], payload);
-        if (!this.usersToID[TradingAccountId]) console.log("debug: ", this.usersToID);
-        if (TradingAccountId === "all") this.io.emit(name, payload);
+        console.info('Emitting event: ' + name + ' to', this.usersToID[TradingAccountId], payload);
+        if (!this.usersToID[TradingAccountId]) console.log('debug: ', this.usersToID);
+        if (TradingAccountId === 'all') this.io.emit(name, payload);
         else this.io.to(this.usersToID[TradingAccountId]).emit(name, payload);
     };
     SendMessageToSuperUser = ({ name, payload }: SendMessageToSuperUserType) => {
         if (!this.superUserID)
             this.SendMessageToClient({
-                data: { name: BACKEND_SERVER_UPDATE, payload: "disconneted" },
-                TradingAccountId: "all",
+                data: { name: BACKEND_SERVER_UPDATE, payload: 'disconneted' },
+                TradingAccountId: 'all',
             });
         else {
-            console.info("Emitting event: " + "superUser" + " to", payload);
+            console.info('Emitting event: ' + 'superUser' + ' to', payload);
             this.io.to(this.superUserID).emit(name, payload);
         }
     };
