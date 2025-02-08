@@ -13,6 +13,7 @@ export const verifyDiscordAccessToken = async (accessToken: string) => {
 
         return { id: response.data.id as string, provider: 'discord' as const };
     } catch (error) {
+        console.warn(error)
         throw new Error('Invalid Discord access token');
     }
 };
@@ -26,6 +27,7 @@ export const verifyGoogleAccessToken = async (accessToken: string) => {
         );
         return { id: response.data.sub as string, provider: 'google' as const };
     } catch (error) {
+        console.warn(error)
         throw new Error('Invalid Google access token');
     }
 };
